@@ -101,14 +101,7 @@ export function SettingsModal({
         checked={alwaysShowOverlay}
         onChange={onToggleAlwaysShowOverlay}
       />
-      <MenuItem
-        onClick={onToggleDebugMode}
-        right={
-          isDebugMode ? <span className="w-6 h-6 rounded-full bg-accent-80 shrink-0" /> : undefined
-        }
-      >
-        Debug View
-      </MenuItem>
+      <Checkbox label="Debug View" checked={isDebugMode} onChange={onToggleDebugMode} />
     </Modal>
   );
 }

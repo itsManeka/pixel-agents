@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '../../components/ui/Button.js';
+import { ColorPicker } from '../../components/ui/ColorPicker.js';
+import { ItemSelect } from '../../components/ui/ItemSelect.js';
 import { getColorizedSprite } from '../colorize.js';
 import { getColorizedFloorSprite, getFloorPatternCount, hasFloorSprites } from '../floorTiles.js';
 import type { FurnitureCategory, LoadedAssetData } from '../layout/furnitureCatalog.js';
@@ -33,141 +35,7 @@ interface EditorToolbarProps {
   loadedAssets?: LoadedAssetData;
 }
 
-/** Render a floor pattern preview at 2x (32x32 canvas showing the 16x16 tile) */
-function FloorPatternPreview({
-  patternIndex,
-  color,
-  selected,
-  onClick,
-}: {
-  patternIndex: number;
-  color: FloorColor;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const displaySize = 32;
-  const tileZoom = 2;
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    canvas.width = displaySize;
-    canvas.height = displaySize;
-    ctx.imageSmoothingEnabled = false;
-
-    if (!hasFloorSprites()) {
-      ctx.fillStyle = '#444';
-      ctx.fillRect(0, 0, displaySize, displaySize);
-      return;
-    }
-
-    const sprite = getColorizedFloorSprite(patternIndex, color);
-    const cached = getCachedSprite(sprite, tileZoom);
-    ctx.drawImage(cached, 0, 0);
-  }, [patternIndex, color]);
-
-  return (
-    <button
-      onClick={onClick}
-      title={`Floor ${patternIndex}`}
-      className={selected ? 'pixel-thumb-btn-selected' : 'pixel-thumb-btn'}
-      style={{ width: displaySize, height: displaySize }}
-    >
-      <canvas
-        ref={canvasRef}
-        style={{ width: displaySize, height: displaySize, display: 'block' }}
-      />
-    </button>
-  );
-}
-
-/** Render a wall set preview showing the first piece (bitmask 0, 16×32) at 1x scale */
-function WallSetPreview({
-  setIndex,
-  color,
-  selected,
-  onClick,
-}: {
-  setIndex: number;
-  color: FloorColor;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const displayW = 32;
-  const displayH = 64;
-  const previewZoom = 2;
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    canvas.width = displayW;
-    canvas.height = displayH;
-    ctx.imageSmoothingEnabled = false;
-
-    const sprite = getWallSetPreviewSprite(setIndex);
-    if (!sprite) {
-      ctx.fillStyle = '#444';
-      ctx.fillRect(0, 0, displayW, displayH);
-      return;
-    }
-
-    // Colorize the preview sprite using the same colorize path as rendering
-    const cacheKey = `wall-preview-${setIndex}-${color.h}-${color.s}-${color.b}-${color.c}`;
-    const colorized = getColorizedSprite(cacheKey, sprite, { ...color, colorize: true });
-    const cached = getCachedSprite(colorized, previewZoom);
-    ctx.drawImage(cached, 0, 0);
-  }, [setIndex, color]);
-
-  return (
-    <button
-      onClick={onClick}
-      title={`Wall ${setIndex + 1}`}
-      className={selected ? 'pixel-thumb-btn-selected' : 'pixel-thumb-btn'}
-      style={{ width: displayW, height: displayH }}
-    >
-      <canvas ref={canvasRef} style={{ width: displayW, height: displayH, display: 'block' }} />
-    </button>
-  );
-}
-
-/** Slider control for a single color parameter */
-function ColorSlider({
-  label,
-  value,
-  min,
-  max,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <div className="flex items-center gap-4">
-      <span className="text-sm text-[#999] w-28 text-right shrink-0">{label}</span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="flex-1 h-12"
-        style={{ accentColor: 'rgba(90, 140, 255, 0.8)' }}
-      />
-      <span className="text-sm text-[#999] w-48 text-right shrink-0">{value}</span>
-    </div>
-  );
-}
+const THUMB_ZOOM = 2;
 
 const DEFAULT_FURNITURE_COLOR: FloorColor = { h: 0, s: 0, b: 0, c: 0 };
 
@@ -219,28 +87,8 @@ export function EditorToolbar({
     }
   }, [loadedAssets]);
 
-  const handleColorChange = useCallback(
-    (key: keyof FloorColor, value: number) => {
-      onFloorColorChange({ ...floorColor, [key]: value });
-    },
-    [floorColor, onFloorColorChange],
-  );
-
-  const handleWallColorChange = useCallback(
-    (key: keyof FloorColor, value: number) => {
-      onWallColorChange({ ...wallColor, [key]: value });
-    },
-    [wallColor, onWallColorChange],
-  );
-
   // For selected furniture: use existing color or default
   const effectiveColor = selectedFurnitureColor ?? DEFAULT_FURNITURE_COLOR;
-  const handleSelFurnColorChange = useCallback(
-    (key: keyof FloorColor, value: number) => {
-      onSelectedFurnitureColorChange({ ...effectiveColor, [key]: value });
-    },
-    [effectiveColor, onSelectedFurnitureColorChange],
-  );
 
   const categoryItems = getCatalogByCategory(activeCategory);
 
@@ -296,7 +144,7 @@ export function EditorToolbar({
 
       {/* Sub-panel: Floor tiles — stacked bottom-to-top via column-reverse */}
       {isFloorActive && (
-        <div className="flex flex-col-reverse gap-6">
+        <div className="flex flex-col-reverse gap-4">
           {/* Color toggle + Pick — just above tool row */}
           <div className="flex gap-4 items-center">
             <Button
@@ -318,48 +166,28 @@ export function EditorToolbar({
           </div>
 
           {/* Color controls (collapsible) — above Wall/Color/Pick */}
-          {showColor && (
-            <div className="pixel-color-panel">
-              <ColorSlider
-                label="H"
-                value={floorColor.h}
-                min={0}
-                max={360}
-                onChange={(v) => handleColorChange('h', v)}
-              />
-              <ColorSlider
-                label="S"
-                value={floorColor.s}
-                min={0}
-                max={100}
-                onChange={(v) => handleColorChange('s', v)}
-              />
-              <ColorSlider
-                label="B"
-                value={floorColor.b}
-                min={-100}
-                max={100}
-                onChange={(v) => handleColorChange('b', v)}
-              />
-              <ColorSlider
-                label="C"
-                value={floorColor.c}
-                min={-100}
-                max={100}
-                onChange={(v) => handleColorChange('c', v)}
-              />
-            </div>
-          )}
+          {showColor && <ColorPicker value={floorColor} onChange={onFloorColorChange} colorize />}
 
           {/* Floor pattern horizontal carousel — at the top */}
-          <div className="pixel-carousel">
+          <div className="carousel">
             {floorPatterns.map((patIdx) => (
-              <FloorPatternPreview
+              <ItemSelect
                 key={patIdx}
-                patternIndex={patIdx}
-                color={floorColor}
+                width={32}
+                height={32}
                 selected={selectedTileType === patIdx}
                 onClick={() => onTileTypeChange(patIdx as TileTypeVal)}
+                title={`Floor ${patIdx}`}
+                deps={[patIdx, floorColor]}
+                draw={(ctx, w, h) => {
+                  if (!hasFloorSprites()) {
+                    ctx.fillStyle = '#444';
+                    ctx.fillRect(0, 0, w, h);
+                    return;
+                  }
+                  const sprite = getColorizedFloorSprite(patIdx, floorColor);
+                  ctx.drawImage(getCachedSprite(sprite, THUMB_ZOOM), 0, 0);
+                }}
               />
             ))}
           </div>
@@ -368,7 +196,7 @@ export function EditorToolbar({
 
       {/* Sub-panel: Wall — stacked bottom-to-top via column-reverse */}
       {isWallActive && (
-        <div className="flex flex-col-reverse gap-6">
+        <div className="flex flex-col-reverse gap-4">
           {/* Color toggle — just above tool row */}
           <div className="flex gap-4 items-center">
             <Button
@@ -382,49 +210,34 @@ export function EditorToolbar({
           </div>
 
           {/* Color controls (collapsible) */}
-          {showWallColor && (
-            <div className="pixel-color-panel">
-              <ColorSlider
-                label="H"
-                value={wallColor.h}
-                min={0}
-                max={360}
-                onChange={(v) => handleWallColorChange('h', v)}
-              />
-              <ColorSlider
-                label="S"
-                value={wallColor.s}
-                min={0}
-                max={100}
-                onChange={(v) => handleWallColorChange('s', v)}
-              />
-              <ColorSlider
-                label="B"
-                value={wallColor.b}
-                min={-100}
-                max={100}
-                onChange={(v) => handleWallColorChange('b', v)}
-              />
-              <ColorSlider
-                label="C"
-                value={wallColor.c}
-                min={-100}
-                max={100}
-                onChange={(v) => handleWallColorChange('c', v)}
-              />
-            </div>
-          )}
+          {showWallColor && <ColorPicker value={wallColor} onChange={onWallColorChange} colorize />}
 
           {/* Wall set picker — horizontal carousel at the top */}
           {getWallSetCount() > 0 && (
-            <div className="pixel-carousel">
+            <div className="carousel">
               {Array.from({ length: getWallSetCount() }, (_, i) => (
-                <WallSetPreview
+                <ItemSelect
                   key={i}
-                  setIndex={i}
-                  color={wallColor}
+                  width={32}
+                  height={64}
                   selected={selectedWallSet === i}
                   onClick={() => onWallSetChange(i)}
+                  title={`Wall ${i + 1}`}
+                  deps={[i, wallColor]}
+                  draw={(ctx, w, h) => {
+                    const sprite = getWallSetPreviewSprite(i);
+                    if (!sprite) {
+                      ctx.fillStyle = '#444';
+                      ctx.fillRect(0, 0, w, h);
+                      return;
+                    }
+                    const cacheKey = `wall-preview-${i}-${wallColor.h}-${wallColor.s}-${wallColor.b}-${wallColor.c}`;
+                    const colorized = getColorizedSprite(cacheKey, sprite, {
+                      ...wallColor,
+                      colorize: true,
+                    });
+                    ctx.drawImage(getCachedSprite(colorized, THUMB_ZOOM), 0, 0);
+                  }}
                 />
               ))}
             </div>
@@ -436,7 +249,7 @@ export function EditorToolbar({
       {isFurnitureActive && (
         <div className="flex flex-col-reverse gap-4">
           {/* Category tabs + Pick — just above tool row */}
-          <div className="flex gap-2 flex-wrap items-center">
+          <div className="flex gap-4 flex-wrap items-center">
             {getActiveCategories().map((cat) => (
               <Button
                 key={cat.id}
@@ -458,45 +271,32 @@ export function EditorToolbar({
             </Button>
           </div>
           {/* Furniture items — single-row horizontal carousel at 2x */}
-          <div className="pixel-carousel">
-            {categoryItems.map((entry) => {
-              const cached = getCachedSprite(entry.sprite, 2);
-              const isSelected = selectedFurnitureType === entry.type;
-              return (
-                <button
-                  key={entry.type}
-                  onClick={() => onFurnitureTypeChange(entry.type)}
-                  title={entry.label}
-                  className={`${isSelected ? 'pixel-thumb-btn-selected' : 'pixel-thumb-btn'} flex items-center justify-center`}
-                  style={{ width: thumbSize, height: thumbSize }}
-                >
-                  <canvas
-                    ref={(el) => {
-                      if (!el) return;
-                      const ctx = el.getContext('2d');
-                      if (!ctx) return;
-                      const scale =
-                        Math.min(thumbSize / cached.width, thumbSize / cached.height) * 0.85;
-                      el.width = thumbSize;
-                      el.height = thumbSize;
-                      ctx.imageSmoothingEnabled = false;
-                      ctx.clearRect(0, 0, thumbSize, thumbSize);
-                      const dw = cached.width * scale;
-                      const dh = cached.height * scale;
-                      ctx.drawImage(cached, (thumbSize - dw) / 2, (thumbSize - dh) / 2, dw, dh);
-                    }}
-                    style={{ width: thumbSize, height: thumbSize }}
-                  />
-                </button>
-              );
-            })}
+          <div className="carousel">
+            {categoryItems.map((entry) => (
+              <ItemSelect
+                key={entry.type}
+                width={thumbSize}
+                height={thumbSize}
+                selected={selectedFurnitureType === entry.type}
+                onClick={() => onFurnitureTypeChange(entry.type)}
+                title={entry.label}
+                deps={[entry.type, entry.sprite]}
+                draw={(ctx, w, h) => {
+                  const cached = getCachedSprite(entry.sprite, 2);
+                  const scale = Math.min(w / cached.width, h / cached.height) * 0.85;
+                  const dw = cached.width * scale;
+                  const dh = cached.height * scale;
+                  ctx.drawImage(cached, (w - dw) / 2, (h - dh) / 2, dw, dh);
+                }}
+              />
+            ))}
           </div>
         </div>
       )}
 
       {/* Selected furniture color panel — shows when any placed furniture item is selected */}
       {selectedFurnitureUid && (
-        <div className="flex flex-col-reverse gap-3">
+        <div className="flex flex-col-reverse gap-4">
           <div className="flex gap-4 items-center">
             <Button
               variant={showFurnitureColor ? 'active' : 'default'}
@@ -518,71 +318,11 @@ export function EditorToolbar({
             )}
           </div>
           {showFurnitureColor && (
-            <div className="pixel-color-panel">
-              {effectiveColor.colorize ? (
-                <>
-                  <ColorSlider
-                    label="H"
-                    value={effectiveColor.h}
-                    min={0}
-                    max={360}
-                    onChange={(v) => handleSelFurnColorChange('h', v)}
-                  />
-                  <ColorSlider
-                    label="S"
-                    value={effectiveColor.s}
-                    min={0}
-                    max={100}
-                    onChange={(v) => handleSelFurnColorChange('s', v)}
-                  />
-                </>
-              ) : (
-                <>
-                  <ColorSlider
-                    label="H"
-                    value={effectiveColor.h}
-                    min={-180}
-                    max={180}
-                    onChange={(v) => handleSelFurnColorChange('h', v)}
-                  />
-                  <ColorSlider
-                    label="S"
-                    value={effectiveColor.s}
-                    min={-100}
-                    max={100}
-                    onChange={(v) => handleSelFurnColorChange('s', v)}
-                  />
-                </>
-              )}
-              <ColorSlider
-                label="B"
-                value={effectiveColor.b}
-                min={-100}
-                max={100}
-                onChange={(v) => handleSelFurnColorChange('b', v)}
-              />
-              <ColorSlider
-                label="C"
-                value={effectiveColor.c}
-                min={-100}
-                max={100}
-                onChange={(v) => handleSelFurnColorChange('c', v)}
-              />
-              <label className="flex items-center gap-4 text-sm text-[#999] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!!effectiveColor.colorize}
-                  onChange={(e) =>
-                    onSelectedFurnitureColorChange({
-                      ...effectiveColor,
-                      colorize: e.target.checked || undefined,
-                    })
-                  }
-                  style={{ accentColor: 'rgba(90, 140, 255, 0.8)' }}
-                />
-                Colorize
-              </label>
-            </div>
+            <ColorPicker
+              value={effectiveColor}
+              onChange={onSelectedFurnitureColorChange}
+              showColorizeToggle
+            />
           )}
         </div>
       )}

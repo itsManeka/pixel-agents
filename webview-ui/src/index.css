@@ -116,22 +116,8 @@
     @apply bg-bg border-2 border-border rounded-none shadow-pixel;
   }
 
-  /* Color control panel (editor-specific) */
-  .pixel-color-panel {
-    @apply flex flex-col gap-3 py-4 px-6 bg-bg-dark border-2 border-border rounded-none;
-  }
-
-  /* Thumbnail button (floor/wall/furniture previews) */
-  .pixel-thumb-btn {
-    @apply p-0 rounded-none cursor-pointer overflow-hidden shrink-0 bg-bg-thumb border-2 border-border;
-  }
-
-  .pixel-thumb-btn-selected {
-    @apply p-0 rounded-none cursor-pointer overflow-hidden shrink-0 bg-bg-thumb border-2 border-accent;
-  }
-
   /* Horizontal carousel for editor items */
-  .pixel-carousel {
-    @apply flex gap-4 overflow-x-auto flex-nowrap pb-2;
+  .carousel {
+    @apply flex gap-8 overflow-x-auto flex-nowrap pb-2;
   }
 }

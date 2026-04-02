@@ -45,9 +45,10 @@ function EditActionBar({
   const redoDisabled = es.redoStack.length === 0;
 
   return (
-    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 flex gap-4 items-center pixel-panel py-4 px-8">
+    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 flex gap-4 items-center pixel-panel p-4">
       <Button
         variant={undoDisabled ? 'disabled' : 'default'}
+        size="md"
         onClick={undoDisabled ? undefined : editor.handleUndo}
         title="Undo (Ctrl+Z)"
       >
@@ -55,17 +56,19 @@ function EditActionBar({
       </Button>
       <Button
         variant={redoDisabled ? 'disabled' : 'default'}
+        size="md"
         onClick={redoDisabled ? undefined : editor.handleRedo}
         title="Redo (Ctrl+Y)"
       >
         Redo
       </Button>
-      <Button variant="default" onClick={editor.handleSave} title="Save layout">
+      <Button variant="default" size="md" onClick={editor.handleSave} title="Save layout">
         Save
       </Button>
       {!showResetConfirm ? (
         <Button
           variant="default"
+          size="md"
           onClick={() => setShowResetConfirm(true)}
           title="Reset to last saved layout"
         >
@@ -76,6 +79,7 @@ function EditActionBar({
           <span className="text-base text-reset-text">Reset?</span>
           <Button
             variant="default"
+            size="md"
             className="bg-danger text-white"
             onClick={() => {
               setShowResetConfirm(false);
@@ -84,7 +88,7 @@ function EditActionBar({
           >
             Yes
           </Button>
-          <Button variant="default" onClick={() => setShowResetConfirm(false)}>
+          <Button variant="default" size="md" onClick={() => setShowResetConfirm(false)}>
             No
           </Button>
         </div>
