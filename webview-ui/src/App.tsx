@@ -31,22 +31,6 @@ function getOfficeState(): OfficeState {
   return officeStateRef.current;
 }
 
-const actionBarBtnStyle: React.CSSProperties = {
-  padding: '4px 10px',
-  fontSize: '22px',
-  background: 'var(--pixel-btn-bg)',
-  color: 'var(--pixel-text-dim)',
-  border: '2px solid transparent',
-  borderRadius: 0,
-  cursor: 'pointer',
-};
-
-const actionBarBtnDisabled: React.CSSProperties = {
-  ...actionBarBtnStyle,
-  opacity: 'var(--pixel-btn-disabled-opacity)',
-  cursor: 'default',
-};
-
 function EditActionBar({
   editor,
   editorState: es,
@@ -60,53 +44,37 @@ function EditActionBar({
   const redoDisabled = es.redoStack.length === 0;
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        top: 8,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 'var(--pixel-controls-z)',
-        display: 'flex',
-        gap: 4,
-        alignItems: 'center',
-        background: 'var(--pixel-bg)',
-        border: '2px solid var(--pixel-border)',
-        borderRadius: 0,
-        padding: '4px 8px',
-        boxShadow: 'var(--pixel-shadow)',
-      }}
-    >
+    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 flex gap-4 items-center pixel-panel py-4 px-8">
       <button
-        style={undoDisabled ? actionBarBtnDisabled : actionBarBtnStyle}
+        className={undoDisabled ? 'pixel-action-btn-disabled' : 'pixel-action-btn'}
         onClick={undoDisabled ? undefined : editor.handleUndo}
         title="Undo (Ctrl+Z)"
       >
         Undo
       </button>
       <button
-        style={redoDisabled ? actionBarBtnDisabled : actionBarBtnStyle}
+        className={redoDisabled ? 'pixel-action-btn-disabled' : 'pixel-action-btn'}
         onClick={redoDisabled ? undefined : editor.handleRedo}
         title="Redo (Ctrl+Y)"
       >
         Redo
       </button>
-      <button style={actionBarBtnStyle} onClick={editor.handleSave} title="Save layout">
+      <button className="pixel-action-btn" onClick={editor.handleSave} title="Save layout">
         Save
       </button>
       {!showResetConfirm ? (
         <button
-          style={actionBarBtnStyle}
+          className="pixel-action-btn"
           onClick={() => setShowResetConfirm(true)}
           title="Reset to last saved layout"
         >
           Reset
         </button>
       ) : (
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-          <span style={{ fontSize: '22px', color: 'var(--pixel-reset-text)' }}>Reset?</span>
+        <div className="flex gap-4 items-center">
+          <span className="text-[22px] text-pixel-reset-text">Reset?</span>
           <button
-            style={{ ...actionBarBtnStyle, background: 'var(--pixel-danger-bg)', color: '#fff' }}
+            className="pixel-action-btn bg-pixel-danger text-white"
             onClick={() => {
               setShowResetConfirm(false);
               editor.handleReset();
@@ -114,7 +82,7 @@ function EditActionBar({
           >
             Yes
           </button>
-          <button style={actionBarBtnStyle} onClick={() => setShowResetConfirm(false)}>
+          <button className="pixel-action-btn" onClick={() => setShowResetConfirm(false)}>
             No
           </button>
         </div>
@@ -249,14 +217,8 @@ function App() {
   if (!layoutReady) {
     return (
       <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--vscode-foreground)',
-        }}
+        className="w-full h-full flex items-center justify-center"
+        style={{ color: 'var(--vscode-foreground)' }}
       >
         Loading...
       </div>
@@ -264,10 +226,7 @@ function App() {
   }
 
   return (
-    <div
-      ref={containerRef}
-      style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}
-    >
+    <div ref={containerRef} className="w-full h-full relative overflow-hidden">
       <style>{`
         @keyframes pixel-agents-pulse {
           0%, 100% { opacity: 1; }
@@ -298,13 +257,8 @@ function App() {
 
       {/* Vignette overlay */}
       <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'var(--pixel-vignette)',
-          pointerEvents: 'none',
-          zIndex: 40,
-        }}
+        className="absolute inset-0 pointer-events-none z-[40]"
+        style={{ background: 'var(--pixel-vignette)' }}
       />
 
       <BottomToolbar
@@ -344,22 +298,8 @@ function App() {
 
       {showRotateHint && (
         <div
-          style={{
-            position: 'absolute',
-            top: editor.isDirty ? 52 : 8,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 49,
-            background: 'var(--pixel-hint-bg)',
-            color: '#fff',
-            fontSize: '20px',
-            padding: '3px 8px',
-            borderRadius: 0,
-            border: '2px solid var(--pixel-accent)',
-            boxShadow: 'var(--pixel-shadow)',
-            pointerEvents: 'none',
-            whiteSpace: 'nowrap',
-          }}
+          className="absolute left-1/2 -translate-x-1/2 z-[49] bg-pixel-hint text-white text-[20px] py-3 px-8 rounded-none border-2 border-pixel-accent shadow-pixel pointer-events-none whitespace-nowrap"
+          style={{ top: editor.isDirty ? 52 : 8 }}
         >
           Rotate (R)
         </div>
@@ -421,59 +361,28 @@ function App() {
 
       {showMigrationNotice && (
         <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-          }}
+          className="absolute inset-0 bg-black/70 flex items-center justify-center z-[100]"
           onClick={() => setMigrationNoticeDismissed(true)}
         >
           <div
-            style={{
-              background: 'var(--pixel-bg)',
-              border: '2px solid var(--pixel-border)',
-              borderRadius: 0,
-              padding: '24px 32px',
-              maxWidth: 620,
-              boxShadow: 'var(--pixel-shadow)',
-              textAlign: 'center',
-              lineHeight: 1.3,
-            }}
+            className="pixel-panel py-24 px-32 max-w-[620px] text-center leading-[1.3]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ fontSize: '40px', marginBottom: 12, color: 'var(--pixel-accent)' }}>
-              We owe you an apology!
-            </div>
-            <p style={{ fontSize: '26px', color: 'var(--pixel-text)', margin: '0 0 12px 0' }}>
+            <div className="text-[40px] mb-12 text-pixel-accent">We owe you an apology!</div>
+            <p className="text-[26px] text-pixel-text m-0 mb-12">
               We've just migrated to fully open-source assets, all built from scratch with love.
               Unfortunately, this means your previous layout had to be reset.
             </p>
-            <p style={{ fontSize: '26px', color: 'var(--pixel-text)', margin: '0 0 12px 0' }}>
-              We're really sorry about that.
-            </p>
-            <p style={{ fontSize: '26px', color: 'var(--pixel-text)', margin: '0 0 12px 0' }}>
+            <p className="text-[26px] text-pixel-text m-0 mb-12">We're really sorry about that.</p>
+            <p className="text-[26px] text-pixel-text m-0 mb-12">
               The good news? This was a one-time thing, and it paves the way for some genuinely
               exciting updates ahead.
             </p>
-            <p style={{ fontSize: '26px', color: 'var(--pixel-text-dim)', margin: '0 0 20px 0' }}>
+            <p className="text-[26px] text-pixel-text-dim m-0 mb-20">
               Stay tuned, and thanks for using Pixel Agents!
             </p>
             <button
-              className="pixel-agents-migration-btn"
-              style={{
-                padding: '6px 24px 8px',
-                fontSize: '30px',
-                background: 'var(--pixel-accent)',
-                color: '#fff',
-                border: '2px solid var(--pixel-accent)',
-                borderRadius: 0,
-                cursor: 'pointer',
-                boxShadow: 'var(--pixel-shadow)',
-              }}
+              className="pixel-agents-migration-btn py-6 px-24 pb-8 text-[30px] bg-pixel-accent text-white border-2 border-pixel-accent rounded-none cursor-pointer shadow-pixel"
               onClick={() => setMigrationNoticeDismissed(true)}
             >
               Got it

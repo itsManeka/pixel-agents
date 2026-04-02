@@ -21,62 +21,19 @@ export function ChangelogModal({ isOpen, onClose, currentVersion }: ChangelogMod
   return (
     <>
       {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          background: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 51,
-        }}
-      />
+      <div onClick={onClose} className="pixel-backdrop z-[51]" />
       {/* Modal */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 52,
-          background: 'var(--pixel-bg)',
-          border: '2px solid var(--pixel-border)',
-          borderRadius: 0,
-          padding: '4px',
-          boxShadow: 'var(--pixel-shadow)',
-          minWidth: 280,
-          maxWidth: 500,
-        }}
-      >
+      <div className="pixel-modal z-[52] min-w-[280px] max-w-[500px]">
         {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '4px 10px',
-            borderBottom: '1px solid var(--pixel-border)',
-            marginBottom: '4px',
-          }}
-        >
-          <span style={{ fontSize: '32px', color: 'rgba(255, 255, 255, 0.9)' }}>
-            What's New in v{entry.version}
-          </span>
+        <div className="pixel-modal-header">
+          <span className="text-[32px] text-pixel-text-bright">What's New in v{entry.version}</span>
           <button
             onClick={onClose}
             onMouseEnter={() => setHovered('close')}
             onMouseLeave={() => setHovered(null)}
+            className="pixel-close-btn pb-[5px] leading-[0.5]"
             style={{
               background: hovered === 'close' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-              border: 'none',
-              borderRadius: 0,
-              color: 'rgba(255, 255, 255, 0.6)',
-              fontSize: '24px',
-              cursor: 'pointer',
-              padding: '0px 4px 5px',
-              lineHeight: 0.5,
             }}
           >
             x
@@ -84,34 +41,13 @@ export function ChangelogModal({ isOpen, onClose, currentVersion }: ChangelogMod
         </div>
 
         {/* Body */}
-        <div style={{ padding: '4px 10px', maxHeight: '60vh', overflowY: 'auto' }}>
+        <div className="py-4 px-10 max-h-[60vh] overflow-y-auto">
           {entry.sections.map((section) => (
-            <div key={section.title} style={{ marginBottom: 12 }}>
-              <div
-                style={{
-                  fontSize: '24px',
-                  color: 'var(--pixel-accent)',
-                  marginBottom: 4,
-                }}
-              >
-                {section.title}
-              </div>
-              <ul
-                style={{
-                  margin: 0,
-                  paddingLeft: 18,
-                  listStyleType: 'disc',
-                }}
-              >
+            <div key={section.title} className="mb-12">
+              <div className="text-[24px] text-pixel-accent mb-4">{section.title}</div>
+              <ul className="m-0 pl-18 list-disc">
                 {section.items.map((item, i) => (
-                  <li
-                    key={i}
-                    style={{
-                      fontSize: '20px',
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      marginBottom: 2,
-                    }}
-                  >
+                  <li key={i} className="text-[20px] text-pixel-text mb-2">
                     {item}
                   </li>
                 ))}
@@ -121,31 +57,16 @@ export function ChangelogModal({ isOpen, onClose, currentVersion }: ChangelogMod
 
           {/* Contributors */}
           {entry.contributors.length > 0 && (
-            <div style={{ marginBottom: 8 }}>
-              <div
-                style={{
-                  fontSize: '22px',
-                  color: 'var(--pixel-accent)',
-                  marginBottom: 4,
-                }}
-              >
-                Contributors
-              </div>
-              <ul style={{ margin: 0, paddingLeft: 18, listStyleType: 'disc' }}>
+            <div className="mb-8">
+              <div className="text-[22px] text-pixel-accent mb-4">Contributors</div>
+              <ul className="m-0 pl-18 list-disc">
                 {entry.contributors.map((c) => (
-                  <li
-                    key={c.name}
-                    style={{
-                      fontSize: '20px',
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      marginBottom: 2,
-                    }}
-                  >
+                  <li key={c.name} className="text-[20px] text-pixel-text mb-2">
                     <a
                       href={c.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ color: 'var(--pixel-accent)', textDecoration: 'none' }}
+                      className="text-pixel-accent no-underline"
                     >
                       {c.name}
                     </a>
@@ -159,28 +80,12 @@ export function ChangelogModal({ isOpen, onClose, currentVersion }: ChangelogMod
         </div>
 
         {/* Footer */}
-        <div
-          style={{
-            padding: '6px 10px',
-            borderTop: '1px solid var(--pixel-border)',
-            marginTop: '4px',
-            display: 'flex',
-            justifyContent: 'center',
-          }}
-        >
+        <div className="py-6 px-10 border-t border-pixel-border mt-4 flex justify-center">
           <a
             href={`${CHANGELOG_REPO_URL}/blob/main/CHANGELOG.md`}
             target="_blank"
             rel="noopener noreferrer"
-            onMouseEnter={() => setHovered('github')}
-            onMouseLeave={() => setHovered(null)}
-            style={{
-              fontSize: '24px',
-              color: hovered === 'github' ? 'var(--pixel-accent)' : 'var(--pixel-text-dim)',
-              textDecoration: 'none',
-              cursor: 'pointer',
-              transition: 'color 0.2s',
-            }}
+            className="text-[24px] text-pixel-text-dim no-underline cursor-pointer transition-colors duration-200 hover:text-pixel-accent"
           >
             View on GitHub
           </a>

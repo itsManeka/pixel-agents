@@ -62,84 +62,31 @@ export function VersionIndicator({
       {showUpdateNotice && (
         <div
           onClick={handleOpenChangelog}
+          className="absolute bottom-28 right-28 z-[45] pixel-panel py-8 px-10 pb-[9px] cursor-pointer flex flex-col gap-8 max-w-[260px]"
           style={{
-            position: 'absolute',
-            bottom: 28,
-            right: 28,
-            zIndex: 45,
-            background: 'var(--pixel-bg)',
-            border: '2px solid var(--pixel-border)',
-            borderRadius: 0,
-            padding: '8px 10px 9px',
-            boxShadow: 'var(--pixel-shadow)',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 8,
-            maxWidth: 260,
             opacity: fading ? 0 : 1,
             transition: `opacity ${WHATS_NEW_FADE_MS / 1000}s ease-out`,
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-end',
-              gap: 10,
-            }}
-          >
-            <span style={{ fontSize: '24px', color: 'var(--pixel-accent)', lineHeight: 0.5 }}>
+          <div className="flex justify-between items-end gap-10">
+            <span className="text-[24px] text-pixel-accent leading-[0.5]">
               Updated to v{currentMajorMinor}!
             </span>
             <button
               onClick={handleDismiss}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                borderRadius: 0,
-                color: 'rgba(255, 255, 255, 0.5)',
-                fontSize: '22px',
-                cursor: 'pointer',
-                padding: '0 2px',
-                lineHeight: 0.8,
-                marginLeft: 4,
-                flexShrink: 0,
-              }}
+              className="bg-transparent border-none rounded-none text-pixel-text-muted text-[22px] cursor-pointer px-2 leading-[0.8] ml-4 shrink-0"
             >
               x
             </button>
           </div>
-          <span
-            style={{
-              fontSize: '20px',
-              color: 'var(--pixel-text-dim)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            See what's new
-          </span>
+          <span className="text-[20px] text-pixel-text-dim whitespace-nowrap">See what's new</span>
         </div>
       )}
       {/* Hover tooltip — "See what's new" appears on label hover after notice is gone */}
       {!showUpdateNotice && labelHovered && (
         <div
           onClick={handleOpenChangelog}
-          style={{
-            position: 'absolute',
-            bottom: 28,
-            right: 28,
-            zIndex: 45,
-            background: 'var(--pixel-bg)',
-            border: '2px solid var(--pixel-border)',
-            borderRadius: 0,
-            padding: '6px 12px',
-            boxShadow: 'var(--pixel-shadow)',
-            cursor: 'pointer',
-            fontSize: '20px',
-            color: 'var(--pixel-text-dim)',
-            whiteSpace: 'nowrap',
-          }}
+          className="absolute bottom-28 right-28 z-[45] pixel-panel py-6 px-12 cursor-pointer text-[20px] text-pixel-text-dim whitespace-nowrap"
         >
           See what's new!
         </div>
@@ -149,19 +96,8 @@ export function VersionIndicator({
         onMouseEnter={() => setLabelHovered(true)}
         onMouseLeave={() => setLabelHovered(false)}
         onClick={handleOpenChangelog}
-        style={{
-          position: 'absolute',
-          bottom: 8,
-          right: 28,
-          zIndex: 45,
-          fontSize: '24px',
-          color: 'var(--pixel-text-dim)',
-          opacity: labelHovered ? 0.8 : 0.4,
-          cursor: 'pointer',
-          transition: 'opacity 0.2s',
-          userSelect: 'none',
-          paddingRight: 2,
-        }}
+        className="absolute bottom-8 right-28 z-[45] text-[24px] text-pixel-text-dim cursor-pointer select-none pr-2 transition-opacity duration-200"
+        style={{ opacity: labelHovered ? 0.8 : 0.4 }}
       >
         v{currentMajorMinor}
       </div>

@@ -18,37 +18,6 @@ interface BottomToolbarProps {
   onToggleWatchAllSessions: () => void;
 }
 
-const panelStyle: React.CSSProperties = {
-  position: 'absolute',
-  bottom: 10,
-  left: 10,
-  zIndex: 'var(--pixel-controls-z)',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 4,
-  background: 'var(--pixel-bg)',
-  border: '2px solid var(--pixel-border)',
-  borderRadius: 0,
-  padding: '4px 6px',
-  boxShadow: 'var(--pixel-shadow)',
-};
-
-const btnBase: React.CSSProperties = {
-  padding: '5px 10px',
-  fontSize: '24px',
-  color: 'var(--pixel-text)',
-  background: 'var(--pixel-btn-bg)',
-  border: '2px solid transparent',
-  borderRadius: 0,
-  cursor: 'pointer',
-};
-
-const btnActive: React.CSSProperties = {
-  ...btnBase,
-  background: 'var(--pixel-active-bg)',
-  border: '2px solid var(--pixel-accent)',
-};
-
 export function BottomToolbar({
   isEditMode,
   onOpenClaude,
@@ -62,7 +31,6 @@ export function BottomToolbar({
   watchAllSessions,
   onToggleWatchAllSessions,
 }: BottomToolbarProps) {
-  const [hovered, setHovered] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isFolderPickerOpen, setIsFolderPickerOpen] = useState(false);
   const [isBypassMenuOpen, setIsBypassMenuOpen] = useState(false);
@@ -120,117 +88,57 @@ export function BottomToolbar({
   };
 
   return (
-    <div style={panelStyle}>
-      <div ref={folderPickerRef} style={{ position: 'relative' }}>
+    <div className="absolute bottom-10 left-10 z-50 flex items-center gap-4 pixel-panel py-4 px-6">
+      <div ref={folderPickerRef} className="relative">
         <button
           onClick={handleAgentClick}
           onContextMenu={handleAgentRightClick}
-          onMouseEnter={() => setHovered('agent')}
-          onMouseLeave={() => setHovered(null)}
-          style={{
-            ...btnBase,
-            padding: '5px 12px',
-            background:
-              hovered === 'agent' || isFolderPickerOpen || isBypassMenuOpen
-                ? 'var(--pixel-agent-hover-bg)'
-                : 'var(--pixel-agent-bg)',
-            border: '2px solid var(--pixel-agent-border)',
-            color: 'var(--pixel-agent-text)',
-          }}
+          className={`pixel-btn py-[5px] px-12 border-2 border-pixel-agent-border text-pixel-agent-text ${
+            isFolderPickerOpen || isBypassMenuOpen
+              ? 'bg-pixel-agent-hover'
+              : 'bg-pixel-agent-bg hover:bg-pixel-agent-hover'
+          }`}
         >
           + Agent
         </button>
         {isBypassMenuOpen && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '100%',
-              left: 0,
-              marginBottom: 4,
-              background: 'var(--pixel-bg)',
-              border: '2px solid var(--pixel-border)',
-              borderRadius: 0,
-              padding: 4,
-              boxShadow: 'var(--pixel-shadow)',
-              minWidth: 180,
-              zIndex: 'var(--pixel-controls-z)',
-            }}
-          >
+          <div className="pixel-dropdown min-w-[180px]">
             <button
               onClick={() => handleBypassSelect(false)}
               onMouseEnter={() => setHoveredBypass(0)}
               onMouseLeave={() => setHoveredBypass(null)}
+              className="pixel-dropdown-item"
               style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                padding: '6px 10px',
-                fontSize: '24px',
-                color: 'var(--pixel-text)',
                 background: hoveredBypass === 0 ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                border: 'none',
-                borderRadius: 0,
-                cursor: 'pointer',
               }}
             >
               Normal
             </button>
-            <div style={{ height: 1, margin: '4px 0', background: 'var(--pixel-border)' }} />
+            <div className="h-[1px] my-4 bg-pixel-border" />
             <button
               onClick={() => handleBypassSelect(true)}
               onMouseEnter={() => setHoveredBypass(1)}
               onMouseLeave={() => setHoveredBypass(null)}
+              className="pixel-dropdown-item text-pixel-warning"
               style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                padding: '6px 10px',
-                fontSize: '24px',
-                color: 'var(--pixel-warning-text)',
                 background: hoveredBypass === 1 ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                border: 'none',
-                borderRadius: 0,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
               }}
             >
-              <span style={{ fontSize: '16px' }}>⚡</span> Bypass Permissions
+              <span className="text-[16px]">⚡</span> Bypass Permissions
             </button>
           </div>
         )}
         {isFolderPickerOpen && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '100%',
-              left: 0,
-              marginBottom: 4,
-              background: 'var(--pixel-bg)',
-              border: '2px solid var(--pixel-border)',
-              borderRadius: 0,
-              boxShadow: 'var(--pixel-shadow)',
-              minWidth: 160,
-              zIndex: 'var(--pixel-controls-z)',
-            }}
-          >
+          <div className="pixel-dropdown min-w-[160px]">
             {workspaceFolders.map((folder, i) => (
               <button
                 key={folder.path}
                 onClick={() => handleFolderSelect(folder)}
                 onMouseEnter={() => setHoveredFolder(i)}
                 onMouseLeave={() => setHoveredFolder(null)}
+                className="pixel-dropdown-item text-[22px]"
                 style={{
-                  display: 'block',
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '6px 10px',
-                  fontSize: '22px',
-                  color: 'var(--pixel-text)',
-                  background: hoveredFolder === i ? 'var(--pixel-btn-hover-bg)' : 'transparent',
-                  border: 'none',
-                  borderRadius: 0,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
+                  background: hoveredFolder === i ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
                 }}
               >
                 {folder.name}
@@ -241,34 +149,15 @@ export function BottomToolbar({
       </div>
       <button
         onClick={onToggleEditMode}
-        onMouseEnter={() => setHovered('edit')}
-        onMouseLeave={() => setHovered(null)}
-        style={
-          isEditMode
-            ? { ...btnActive }
-            : {
-                ...btnBase,
-                background: hovered === 'edit' ? 'var(--pixel-btn-hover-bg)' : btnBase.background,
-              }
-        }
+        className={isEditMode ? 'pixel-btn-active' : 'pixel-btn'}
         title="Edit office layout"
       >
         Layout
       </button>
-      <div style={{ position: 'relative' }}>
+      <div className="relative">
         <button
           onClick={() => setIsSettingsOpen((v) => !v)}
-          onMouseEnter={() => setHovered('settings')}
-          onMouseLeave={() => setHovered(null)}
-          style={
-            isSettingsOpen
-              ? { ...btnActive }
-              : {
-                  ...btnBase,
-                  background:
-                    hovered === 'settings' ? 'var(--pixel-btn-hover-bg)' : btnBase.background,
-                }
-          }
+          className={isSettingsOpen ? 'pixel-btn-active' : 'pixel-btn'}
           title="Settings"
         >
           Settings

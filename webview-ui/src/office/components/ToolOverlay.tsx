@@ -123,78 +123,50 @@ export function ToolOverlay({
 
         let dotColor: string | null = null;
         if (hasPermission) {
-          dotColor = 'var(--pixel-status-permission)';
+          dotColor = 'var(--color-pixel-status-permission)';
         } else if (isActive && hasActiveTools) {
-          dotColor = 'var(--pixel-status-active)';
+          dotColor = 'var(--color-pixel-status-active)';
         }
 
         return (
           <div
             key={id}
+            className="absolute flex flex-col items-center -translate-x-1/2"
             style={{
-              position: 'absolute',
               left: screenX,
               top: screenY - 24,
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
               pointerEvents: isSelected ? 'auto' : 'none',
               opacity: alwaysShowOverlay && !isSelected && !isHovered ? (isSub ? 0.5 : 0.75) : 1,
-              zIndex: isSelected ? 'var(--pixel-overlay-selected-z)' : 'var(--pixel-overlay-z)',
+              zIndex: isSelected ? 42 : 41,
             }}
           >
             <div
+              className="flex items-center gap-5 pixel-panel whitespace-nowrap max-w-[220px]"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                background: 'var(--pixel-bg)',
-                border: isSelected
-                  ? '2px solid var(--pixel-border-light)'
-                  : '2px solid var(--pixel-border)',
-                borderRadius: 0,
+                borderColor: isSelected
+                  ? 'var(--color-pixel-border-light)'
+                  : 'var(--color-pixel-border)',
                 padding: isSelected ? '3px 6px 3px 8px' : '3px 8px',
-                boxShadow: 'var(--pixel-shadow)',
-                whiteSpace: 'nowrap',
-                maxWidth: 220,
               }}
             >
               {dotColor && (
                 <span
-                  className={isActive && !hasPermission ? 'pixel-agents-pulse' : undefined}
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    background: dotColor,
-                    flexShrink: 0,
-                  }}
+                  className={`w-6 h-6 rounded-full shrink-0 ${isActive && !hasPermission ? 'pixel-agents-pulse' : ''}`}
+                  style={{ background: dotColor }}
                 />
               )}
-              <div style={{ overflow: 'hidden' }}>
+              <div className="overflow-hidden">
                 <span
+                  className="text-pixel-text overflow-hidden text-ellipsis block"
                   style={{
                     fontSize: isSub ? '20px' : '22px',
                     fontStyle: isSub ? 'italic' : undefined,
-                    color: 'var(--pixel-text)',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: 'block',
                   }}
                 >
                   {activityText}
                 </span>
                 {ch.folderName && (
-                  <span
-                    style={{
-                      fontSize: '16px',
-                      color: 'var(--pixel-text-dim)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: 'block',
-                    }}
-                  >
+                  <span className="text-[16px] text-pixel-text-dim overflow-hidden text-ellipsis block">
                     {ch.folderName}
                   </span>
                 )}
@@ -206,23 +178,7 @@ export function ToolOverlay({
                     onCloseAgent(id);
                   }}
                   title="Close agent"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--pixel-close-text)',
-                    cursor: 'pointer',
-                    padding: '0 2px',
-                    fontSize: '26px',
-                    lineHeight: 1,
-                    marginLeft: 2,
-                    flexShrink: 0,
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.color = 'var(--pixel-close-hover)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.color = 'var(--pixel-close-text)';
-                  }}
+                  className="bg-none border-none text-pixel-close-text cursor-pointer py-0 px-2 text-[26px] leading-none ml-2 shrink-0 hover:text-pixel-close-hover"
                 >
                   ×
                 </button>
