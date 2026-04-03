@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { toMajorMinor } from '../changelogData.ts';
 import { WHATS_NEW_AUTO_CLOSE_MS, WHATS_NEW_FADE_MS } from '../constants.ts';
+import { Button } from './ui/Button.js';
 
 interface VersionIndicatorProps {
   currentVersion: string;
@@ -62,22 +63,19 @@ export function VersionIndicator({
       {showUpdateNotice && (
         <div
           onClick={handleOpenChangelog}
-          className="absolute bottom-28 right-28 z-[45] pixel-panel py-8 px-10 pb-[9px] cursor-pointer flex flex-col gap-8 max-w-[260px]"
+          className="absolute bottom-42 right-28 z-[45] pixel-panel py-8 px-10 pb-[9px] cursor-pointer flex flex-col gap-8 max-w-[260px]"
           style={{
             opacity: fading ? 0 : 1,
             transition: `opacity ${WHATS_NEW_FADE_MS / 1000}s ease-out`,
           }}
         >
-          <div className="flex justify-between items-end gap-10">
-            <span className="text-lg text-accent leading-[0.5]">
+          <div className="flex justify-between items-center gap-10">
+            <span className="text-lg text-accent-bright leading-none">
               Updated to v{currentMajorMinor}!
             </span>
-            <button
-              onClick={handleDismiss}
-              className="bg-transparent border-none rounded-none text-text-muted text-base cursor-pointer px-2 leading-[0.8] ml-4 shrink-0"
-            >
+            <Button variant="ghost" size="icon" onClick={handleDismiss} className="leading-none">
               x
-            </button>
+            </Button>
           </div>
           <span className="text-sm whitespace-nowrap">See what's new</span>
         </div>
@@ -86,7 +84,7 @@ export function VersionIndicator({
       {!showUpdateNotice && labelHovered && (
         <div
           onClick={handleOpenChangelog}
-          className="absolute bottom-28 right-28 z-[45] pixel-panel py-6 px-12 cursor-pointer text-sm whitespace-nowrap"
+          className="absolute bottom-42 right-28 z-[45] pixel-panel py-6 px-12 cursor-pointer text-sm whitespace-nowrap"
         >
           See what's new!
         </div>

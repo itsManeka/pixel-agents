@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { isSoundEnabled, setSoundEnabled } from '../notificationSound.js';
 import { vscode } from '../vscodeApi.js';
+import { Button } from './ui/Button.js';
 import { Checkbox } from './ui/Checkbox.js';
 import { MenuItem } from './ui/MenuItem.js';
 import { Modal } from './ui/Modal.js';
@@ -73,12 +74,14 @@ export function SettingsModal({
           >
             {dir.split(/[/\\]/).pop() ?? dir}
           </span>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => vscode.postMessage({ type: 'removeExternalAssetDirectory', path: dir })}
-            className="bg-transparent border border-white/20 rounded-none text-text-muted text-2xs cursor-pointer py-[1px] px-6 shrink-0 hover:bg-red-500/20"
+            className="shrink-0"
           >
-            X
-          </button>
+            x
+          </Button>
         </div>
       ))}
       <Checkbox

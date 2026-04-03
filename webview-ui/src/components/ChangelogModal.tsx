@@ -19,13 +19,13 @@ export function ChangelogModal({ isOpen, onClose, currentVersion }: ChangelogMod
       onClose={onClose}
       title={<span className="text-4xl">What's New in v{entry.version}</span>}
       zIndex={51}
-      className="min-w-[280px] max-w-[500px]"
+      className="min-w-sm!"
     >
       {/* Body */}
       <div className="py-4 px-10 max-h-[60vh] overflow-y-auto">
         {entry.sections.map((section) => (
           <div key={section.title} className="mb-12">
-            <div className="text-lg text-accent mb-4">{section.title}</div>
+            <div className="text-lg text-accent-bright mb-4">{section.title}</div>
             <ul className="m-0 pl-18 list-disc">
               {section.items.map((item, i) => (
                 <li key={i} className="text-sm mb-2">
@@ -39,7 +39,7 @@ export function ChangelogModal({ isOpen, onClose, currentVersion }: ChangelogMod
         {/* Contributors */}
         {entry.contributors.length > 0 && (
           <div className="mb-8">
-            <div className="text-base text-accent mb-4">Contributors</div>
+            <div className="text-lg text-accent-bright mb-4">Contributors</div>
             <ul className="m-0 pl-18 list-disc">
               {entry.contributors.map((c) => (
                 <li key={c.name} className="text-sm mb-2">
@@ -47,7 +47,7 @@ export function ChangelogModal({ isOpen, onClose, currentVersion }: ChangelogMod
                     href={c.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-accent no-underline"
+                    className="text-accent-bright hover:text-accent no-underline"
                   >
                     {c.name}
                   </a>
@@ -66,7 +66,7 @@ export function ChangelogModal({ isOpen, onClose, currentVersion }: ChangelogMod
           href={`${CHANGELOG_REPO_URL}/blob/main/CHANGELOG.md`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-lg no-underline cursor-pointer transition-colors duration-200 hover:text-accent"
+          className="text-lg no-underline cursor-pointer transition-colors duration-200 hover:text-accent-bright"
         >
           View on GitHub
         </a>

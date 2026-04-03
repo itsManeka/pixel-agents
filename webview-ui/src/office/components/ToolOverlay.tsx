@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { Button } from '../../components/ui/Button.js';
 import { CHARACTER_SITTING_OFFSET_PX, TOOL_OVERLAY_VERTICAL_OFFSET } from '../../constants.js';
 import type { SubagentCharacter } from '../../hooks/useExtensionMessages.js';
 import type { OfficeState } from '../engine/officeState.js';
@@ -134,28 +135,22 @@ export function ToolOverlay({
             className="absolute flex flex-col items-center -translate-x-1/2"
             style={{
               left: screenX,
-              top: screenY - 24,
+              top: screenY - (ch.folderName ? 34 : 28),
               pointerEvents: isSelected ? 'auto' : 'none',
               opacity: alwaysShowOverlay && !isSelected && !isHovered ? (isSub ? 0.5 : 0.75) : 1,
               zIndex: isSelected ? 42 : 41,
             }}
           >
-            <div
-              className="flex items-center gap-5 pixel-panel whitespace-nowrap max-w-[220px]"
-              style={{
-                borderColor: isSelected ? 'var(--color-border-light)' : 'var(--color-border)',
-                padding: isSelected ? '3px 6px 3px 8px' : '3px 8px',
-              }}
-            >
+            <div className="flex items-center border-border px-8 pt-2 pb-4 gap-5 pixel-panel whitespace-nowrap max-w-[220px]">
               {dotColor && (
                 <span
                   className={`w-6 h-6 rounded-full shrink-0 ${isActive && !hasPermission ? 'pixel-agents-pulse' : ''}`}
                   style={{ background: dotColor }}
                 />
               )}
-              <div className="overflow-hidden">
+              <div className="flex flex-col gap-0 overflow-hidden">
                 <span
-                  className="overflow-hidden text-ellipsis block"
+                  className="overflow-hidden text-ellipsis block leading-none"
                   style={{
                     fontSize: isSub ? '20px' : '22px',
                     fontStyle: isSub ? 'italic' : undefined,
@@ -164,22 +159,24 @@ export function ToolOverlay({
                   {activityText}
                 </span>
                 {ch.folderName && (
-                  <span className="text-xs overflow-hidden text-ellipsis block">
+                  <span className="text-xs leading-none overflow-hidden text-ellipsis block">
                     {ch.folderName}
                   </span>
                 )}
               </div>
               {isSelected && !isSub && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     onCloseAgent(id);
                   }}
                   title="Close agent"
-                  className="bg-none border-none text-close-text cursor-pointer py-0 px-2 text-xl leading-none ml-2 shrink-0 hover:text-close-hover"
+                  className="ml-2 shrink-0 leading-none"
                 >
                   ×
-                </button>
+                </Button>
               )}
             </div>
           </div>

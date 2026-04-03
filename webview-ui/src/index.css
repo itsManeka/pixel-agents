@@ -14,34 +14,28 @@
   --color-bg-dark: #181828;
   --color-bg-thumb: #2a2a3a;
   --color-border: #4a4a6a;
-  --color-border-light: #6a6a8a;
   --color-accent: #6030ff;
   --color-accent-bright: #746fff;
-  --color-green: #5ac88c;
 
   /* Text */
   --color-text: rgba(255, 255, 255, 0.9);
   --color-text-muted: rgba(255, 255, 255, 0.5);
 
   /* Buttons */
-  --color-btn-bg: rgba(255, 255, 255, 0.08);
-  --color-btn-hover: rgba(255, 255, 255, 0.15);
-  --color-active-bg: rgba(93, 90, 255, 0.25);
-
-  /* Close button */
-  --color-close-text: rgba(255, 255, 255, 0.5);
-  --color-close-hover: #e55;
+  --color-btn-bg: rgb(53, 52, 69);
+  --color-btn-hover: rgb(78, 75, 104);
+  --color-active-bg: rgb(44, 43, 109);
 
   /* Semantic */
-  --color-hint: #3278c8;
   --color-reset-text: #ecc;
-  --color-danger: #a33;
-  --color-warning: #f59e0b;
-  --color-accent-80: rgba(90, 140, 255, 0.8);
+  --color-danger: #d14249;
+  --color-warning: #ff8d14;
 
   /* Status */
   --color-status-permission: #cca700;
   --color-status-active: #3794ff;
+  --color-status-success: #89d185;
+  --color-status-error: var(--color-danger);
 
   /* Shadow */
   --shadow-pixel: 2px 2px 0px #0a0a14;
@@ -77,7 +71,6 @@
   --color-border: var(--color-border);
   --color-border-light: var(--color-border-light);
   --color-accent: var(--color-accent);
-  --color-green: var(--color-green);
   --color-text: var(--color-text);
   --color-text-muted: var(--color-text-muted);
   --color-btn-bg: var(--color-btn-bg);
@@ -85,14 +78,13 @@
   --color-active-bg: var(--color-active-bg);
   --color-accent-bright: var(--color-accent-bright);
   --color-close-text: var(--color-close-text);
-  --color-close-hover: var(--color-close-hover);
-  --color-hint: var(--color-hint);
   --color-reset-text: var(--color-reset-text);
   --color-danger: var(--color-danger);
   --color-warning: var(--color-warning);
-  --color-accent-80: var(--color-accent-80);
   --color-status-permission: var(--color-status-permission);
   --color-status-active: var(--color-status-active);
+  --color-status-success: var(--color-status-success);
+  --color-status-error: var(--color-status-error);
 
   /* Shadow */
   --shadow-pixel: var(--shadow-pixel);

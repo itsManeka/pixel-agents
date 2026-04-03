@@ -74,9 +74,9 @@ export function AgentLabels({
 
         let dotColor = 'transparent';
         if (isWaiting) {
-          dotColor = 'var(--vscode-charts-yellow, #cca700)';
+          dotColor = 'var(--color-status-permission)';
         } else if (isActive) {
-          dotColor = 'var(--vscode-charts-blue, #3794ff)';
+          dotColor = 'var(--color-status-active)';
         }
 
         const labelText = subLabelMap.get(id) || `Agent #${id}`;
@@ -84,43 +84,17 @@ export function AgentLabels({
         return (
           <div
             key={id}
-            style={{
-              position: 'absolute',
-              left: screenX,
-              top: screenY - 16,
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              pointerEvents: 'none',
-              zIndex: 40,
-            }}
+            className="absolute flex flex-col items-center pointer-events-none z-40 -translate-x-1/2"
+            style={{ left: screenX, top: screenY - 16 }}
           >
             {dotColor !== 'transparent' && (
               <span
-                className={isActive && !isWaiting ? 'pixel-agents-pulse' : undefined}
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  background: dotColor,
-                  marginBottom: 2,
-                }}
+                className={`w-6 h-6 rounded-full mb-2 ${isActive && !isWaiting ? 'pixel-agents-pulse' : ''}`}
+                style={{ background: dotColor }}
               />
             )}
             <span
-              style={{
-                fontSize: isSub ? '16px' : '18px',
-                fontStyle: isSub ? 'italic' : undefined,
-                color: 'var(--vscode-foreground)',
-                background: 'rgba(30,30,46,0.7)',
-                padding: '1px 4px',
-                borderRadius: 2,
-                whiteSpace: 'nowrap',
-                maxWidth: isSub ? 120 : undefined,
-                overflow: isSub ? 'hidden' : undefined,
-                textOverflow: isSub ? 'ellipsis' : undefined,
-              }}
+              className={`bg-bg/70 py-[1px] px-4 rounded-[2px] whitespace-nowrap  ${isSub ? 'text-xs italic overflow-hidden text-ellipsis max-w-[120px]' : 'text-2xs'}`}
             >
               {labelText}
             </span>

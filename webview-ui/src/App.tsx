@@ -221,14 +221,7 @@ function App() {
     })();
 
   if (!layoutReady) {
-    return (
-      <div
-        className="w-full h-full flex items-center justify-center"
-        style={{ color: 'var(--vscode-foreground)' }}
-      >
-        Loading...
-      </div>
-    );
+    return <div className="w-full h-full flex items-center justify-center ">Loading...</div>;
   }
 
   return (
@@ -304,7 +297,7 @@ function App() {
 
       {showRotateHint && (
         <div
-          className="absolute left-1/2 -translate-x-1/2 z-[49] bg-hint text-white text-sm py-3 px-8 rounded-none border-2 border-accent shadow-pixel pointer-events-none whitespace-nowrap"
+          className="absolute left-1/2 -translate-x-1/2 z-49 bg-accent-bright text-white text-sm py-3 px-8 rounded-none border-2 border-accent shadow-pixel pointer-events-none whitespace-nowrap"
           style={{ top: editor.isDirty ? 52 : 8 }}
         >
           Rotate (R)
@@ -385,12 +378,14 @@ function App() {
               exciting updates ahead.
             </p>
             <p className="text-xl m-0 mb-20">Stay tuned, and thanks for using Pixel Agents!</p>
-            <button
-              className="pixel-agents-migration-btn py-6 px-24 pb-8 text-3xl bg-accent text-white border-2 border-accent rounded-none cursor-pointer shadow-pixel"
+            <Button
+              variant="accent"
+              size="xl"
+              className="pixel-agents-migration-btn shadow-pixel"
               onClick={() => setMigrationNoticeDismissed(true)}
             >
               Got it
-            </button>
+            </Button>
           </div>
         </div>
       )}
