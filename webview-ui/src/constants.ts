@@ -111,6 +111,17 @@ export const PERMISSION_NOTE_2_START_SEC = 0.12;
 export const PERMISSION_NOTE_DURATION_SEC = 0.15;
 export const PERMISSION_VOLUME = 0.12;
 
+// ── Pet Animation & Behavior ────────────────────────────────
+export const PET_WALK_SPEED_PX_PER_SEC = 32;
+export const PET_WALK_FRAME_DURATION_SEC = 0.15;
+export const PET_WANDER_PAUSE_MIN_SEC = 3.0;
+export const PET_WANDER_PAUSE_MAX_SEC = 15.0;
+export const PET_FOLLOW_RECALC_INTERVAL_SEC = 1.0;
+export const PET_FOLLOW_CHANCE = 0.3;
+export const PET_FOLLOW_RADIUS_TILES = 3;
+export const PET_FOLLOW_DURATION_MIN_SEC = 5.0;
+export const PET_FOLLOW_DURATION_MAX_SEC = 15.0;
+
 // ── Furniture Animation ─────────────────────────────────────
 export const FURNITURE_ANIM_INTERVAL_SEC = 0.2;
 

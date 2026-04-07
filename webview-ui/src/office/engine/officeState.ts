@@ -20,19 +20,22 @@ import {
   layoutToSeats,
   layoutToTileMap,
 } from '../layout/layoutSerializer.js';
-import { findPath, getWalkableTiles, isWalkable } from '../layout/tileMap.js';
+import { buildBgFurnitureTiles, findPath, getPetWalkableTiles, getWalkableTiles, isWalkable } from '../layout/tileMap.js';
 import { getLoadedCharacterCount } from '../sprites/spriteData.js';
 import type {
   Character,
   FurnitureInstance,
   OfficeLayout,
+  Pet,
   PlacedFurniture,
+  PlacedPet,
   Seat,
   TileType as TileTypeVal,
 } from '../types.js';
 import { CharacterState, Direction, MATRIX_EFFECT_DURATION, TILE_SIZE } from '../types.js';
 import { createCharacter, updateCharacter } from './characters.js';
 import { matrixEffectSeeds } from './matrixEffect.js';
+import { createPet, updatePet } from './petEntity.js';
 
 export class OfficeState {
   layout: OfficeLayout;
@@ -42,6 +45,9 @@ export class OfficeState {
   furniture: FurnitureInstance[];
   walkableTiles: Array<{ col: number; row: number }>;
   characters: Map<number, Character> = new Map();
+  pets: Pet[] = [];
+  petWalkableTiles: Array<{ col: number; row: number }> = [];
+  bgFurnitureTiles: Set<string> = new Set();
   /** Accumulated time for furniture animation frame cycling */
   furnitureAnimTimer = 0;
   selectedAgentId: number | null = null;
@@ -61,6 +67,8 @@ export class OfficeState {
     this.blockedTiles = getBlockedTiles(this.layout.furniture);
     this.furniture = layoutToFurnitureInstances(this.layout.furniture);
     this.walkableTiles = getWalkableTiles(this.tileMap, this.blockedTiles);
+    this.bgFurnitureTiles = buildBgFurnitureTiles(this.layout.furniture);
+    this.petWalkableTiles = getPetWalkableTiles(this.tileMap, this.blockedTiles, this.layout.furniture);
   }
 
   /** Rebuild all derived state from a new layout. Reassigns existing characters.
@@ -72,17 +80,26 @@ export class OfficeState {
     this.blockedTiles = getBlockedTiles(layout.furniture);
     this.rebuildFurnitureInstances();
     this.walkableTiles = getWalkableTiles(this.tileMap, this.blockedTiles);
+    this.bgFurnitureTiles = buildBgFurnitureTiles(layout.furniture);
+    this.petWalkableTiles = getPetWalkableTiles(this.tileMap, this.blockedTiles, layout.furniture);
 
-    // Shift character positions when grid expands left/up
+    // Shift character and pet positions when grid expands left/up
     if (shift && (shift.col !== 0 || shift.row !== 0)) {
       for (const ch of this.characters.values()) {
         ch.tileCol += shift.col;
         ch.tileRow += shift.row;
         ch.x += shift.col * TILE_SIZE;
         ch.y += shift.row * TILE_SIZE;
-        // Clear path since tile coords changed
         ch.path = [];
         ch.moveProgress = 0;
+      }
+      for (const pet of this.pets) {
+        pet.tileCol += shift.col;
+        pet.tileRow += shift.row;
+        pet.x += shift.col * TILE_SIZE;
+        pet.y += shift.row * TILE_SIZE;
+        pet.path = [];
+        pet.moveProgress = 0;
       }
     }
 
@@ -139,6 +156,8 @@ export class OfficeState {
         this.relocateCharacterToWalkable(ch);
       }
     }
+
+    this.rebuildPetsFromLayout(layout);
   }
 
   /** Move a character to a random walkable tile */
@@ -154,6 +173,7 @@ export class OfficeState {
   }
 
   getLayout(): OfficeLayout {
+    this.layout.pets = this.pets.map((p) => ({ id: p.id, petType: p.petType }));
     return this.layout;
   }
 
@@ -258,6 +278,37 @@ export class OfficeState {
       hueShift = HUE_SHIFT_MIN_DEG + Math.floor(Math.random() * HUE_SHIFT_RANGE_DEG);
     }
     return { palette, hueShift };
+  }
+
+  addPet(placedPet: PlacedPet): void {
+    if (!placedPet.id || placedPet.id.length > 128) return;
+    if (this.pets.find((p) => p.id === placedPet.id)) return;
+    const tiles = this.petWalkableTiles.length > 0 ? this.petWalkableTiles : this.walkableTiles;
+    if (tiles.length === 0) return; // no valid spawn point
+    const spawn = tiles[Math.floor(Math.random() * tiles.length)];
+    const pet = createPet(placedPet.id, placedPet.petType, spawn);
+    this.pets.push(pet);
+  }
+
+  removePet(id: string): void {
+    this.pets = this.pets.filter((p) => p.id !== id);
+  }
+
+  private rebuildPetsFromLayout(layout: OfficeLayout): void {
+    const layoutPets = layout.pets ?? [];
+    const layoutPetIds = new Set(layoutPets.map((p) => p.id));
+    // Remove pets not in layout
+    this.pets = this.pets.filter((p) => layoutPetIds.has(p.id));
+    // Add new pets from layout
+    for (const lp of layoutPets) {
+      if (!this.pets.find((p) => p.id === lp.id)) {
+        this.addPet(lp);
+      }
+    }
+  }
+
+  getPets(): Pet[] {
+    return [...this.pets];
   }
 
   addAgent(
@@ -730,6 +781,19 @@ export class OfficeState {
     // Remove characters that finished despawn
     for (const id of toDelete) {
       this.characters.delete(id);
+    }
+
+    // Update pets
+    for (const pet of this.pets) {
+      updatePet(
+        pet,
+        dt,
+        this.petWalkableTiles,
+        this.characters,
+        this.tileMap,
+        this.blockedTiles,
+        this.bgFurnitureTiles,
+      );
     }
   }
 

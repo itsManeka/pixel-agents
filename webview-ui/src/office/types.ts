@@ -33,6 +33,13 @@ export const CharacterState = {
 } as const;
 export type CharacterState = (typeof CharacterState)[keyof typeof CharacterState];
 
+export const PetState = {
+  IDLE: 'idle',
+  WALK: 'walk',
+  FOLLOW: 'follow',
+} as const;
+export type PetState = (typeof PetState)[keyof typeof PetState];
+
 export const Direction = {
   DOWN: 0,
   LEFT: 1,
@@ -125,6 +132,8 @@ export interface OfficeLayout {
   tileColors?: Array<ColorValue | null>;
   /** Bumped when the bundled default layout changes; forces a reset on existing installs */
   layoutRevision?: number;
+  /** Pets placed in the layout */
+  pets?: PlacedPet[];
 }
 
 export interface Character {
@@ -180,4 +189,39 @@ export interface Character {
   matrixEffectSeeds: number[];
   /** Workspace folder name (only set for multi-root workspaces) */
   folderName?: string;
+}
+
+export interface Pet {
+  id: string;
+  /** Index into getPetSprites() from f01 */
+  petType: number;
+  state: PetState;
+  dir: Direction;
+  /** Pixel position (center of sprite) */
+  x: number;
+  y: number;
+  tileCol: number;
+  tileRow: number;
+  path: Array<{ col: number; row: number }>;
+  /** 0-1 lerp between current tile and next tile */
+  moveProgress: number;
+  /** Animation frame index */
+  frame: number;
+  /** Time accumulator for animation */
+  frameTimer: number;
+  /** Timer for idle wander decisions */
+  wanderTimer: number;
+  /** Character ID to follow, or null */
+  followTargetId: number | null;
+  /** Timer for recalculating follow path */
+  followRecalcTimer: number;
+  /** Duration this pet has been following (resets on FOLLOW entry) */
+  followDuration: number;
+  /** Max follow duration before returning to IDLE */
+  followDurationLimit: number;
+}
+
+export interface PlacedPet {
+  id: string;
+  petType: number;
 }
