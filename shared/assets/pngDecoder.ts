@@ -14,12 +14,19 @@ import {
   CHAR_FRAMES_PER_ROW,
   CHARACTER_DIRECTIONS,
   FLOOR_TILE_SIZE,
+  PET_FRAME_H,
+  PET_FRAME_W_LARGE,
+  PET_FRAME_W_SMALL,
+  PET_IMAGE_HEIGHT,
+  PET_IMAGE_WIDTH,
+  PET_WALK_FRAMES_HORIZ,
+  PET_WALK_FRAMES_VERT,
   WALL_BITMASK_COUNT,
   WALL_GRID_COLS,
   WALL_PIECE_HEIGHT,
   WALL_PIECE_WIDTH,
 } from './constants.js';
-import type { CharacterDirectionSprites } from './types.js';
+import type { CharacterDirectionSprites, PetSpriteFrames } from './types.js';
 
 // ── Sprite decoding ──────────────────────────────────────────
 
@@ -126,6 +133,89 @@ export function decodeCharacterPng(pngBuffer: Buffer): CharacterDirectionSprites
   }
 
   return charData;
+}
+
+/**
+ * Decode a single pet PNG (64×96) into direction-keyed frame arrays.
+ * Line 1 (y=0):  4 frames of 16×32 — walkDown[0..2] + idleDown
+ * Line 2 (y=32): 4 frames of 16×32 — walkUp[0..2] + idleUp
+ * Line 3 (y=64): 2 frames of 32×32 — walkRight[0..1]
+ */
+export function decodePetPng(pngBuffer: Buffer): PetSpriteFrames {
+  try {
+    const png = PNG.sync.read(pngBuffer);
+
+    if (png.width !== PET_IMAGE_WIDTH || png.height !== PET_IMAGE_HEIGHT) {
+      console.warn(
+        `[PngDecoder] Pet sprite has unexpected dimensions: ${png.width}×${png.height} (expected ${PET_IMAGE_WIDTH}×${PET_IMAGE_HEIGHT})`,
+      );
+      throw new Error('Invalid pet sprite dimensions');
+    }
+
+    function extractFrame(ox: number, oy: number, w: number, h: number): string[][] {
+      const sprite: string[][] = [];
+      for (let y = 0; y < h; y++) {
+        const row: string[] = [];
+        for (let x = 0; x < w; x++) {
+          const idx = ((oy + y) * png.width + (ox + x)) * 4;
+          row.push(
+            rgbaToHex(png.data[idx], png.data[idx + 1], png.data[idx + 2], png.data[idx + 3]),
+          );
+        }
+        sprite.push(row);
+      }
+      return sprite;
+    }
+
+    // Line 1 (y=0): 4 frames of 16×32 — walkDown[0..2] + idleDown
+    const walkDown: string[][][] = [];
+    for (let f = 0; f < PET_WALK_FRAMES_VERT; f++) {
+      walkDown.push(extractFrame(f * PET_FRAME_W_SMALL, 0, PET_FRAME_W_SMALL, PET_FRAME_H));
+    }
+    const idleDown = extractFrame(
+      PET_WALK_FRAMES_VERT * PET_FRAME_W_SMALL,
+      0,
+      PET_FRAME_W_SMALL,
+      PET_FRAME_H,
+    );
+
+    // Line 2 (y=32): 4 frames of 16×32 — walkUp[0..2] + idleUp
+    const walkUp: string[][][] = [];
+    for (let f = 0; f < PET_WALK_FRAMES_VERT; f++) {
+      walkUp.push(extractFrame(f * PET_FRAME_W_SMALL, PET_FRAME_H, PET_FRAME_W_SMALL, PET_FRAME_H));
+    }
+    const idleUp = extractFrame(
+      PET_WALK_FRAMES_VERT * PET_FRAME_W_SMALL,
+      PET_FRAME_H,
+      PET_FRAME_W_SMALL,
+      PET_FRAME_H,
+    );
+
+    // Line 3 (y=64): 2 frames of 32×32 — walkRight[0..1]
+    const walkRight: string[][][] = [];
+    for (let f = 0; f < PET_WALK_FRAMES_HORIZ; f++) {
+      walkRight.push(
+        extractFrame(f * PET_FRAME_W_LARGE, PET_FRAME_H * 2, PET_FRAME_W_LARGE, PET_FRAME_H),
+      );
+    }
+
+    return { walkDown, idleDown, walkUp, idleUp, walkRight };
+  } catch (err) {
+    console.warn(
+      `[PngDecoder] Failed to parse pet PNG: ${err instanceof Error ? err.message : err}`,
+    );
+    const emptySmall = (): string[][] =>
+      Array.from({ length: PET_FRAME_H }, () => new Array(PET_FRAME_W_SMALL).fill(''));
+    const emptyLarge = (): string[][] =>
+      Array.from({ length: PET_FRAME_H }, () => new Array(PET_FRAME_W_LARGE).fill(''));
+    return {
+      walkDown: [emptySmall(), emptySmall(), emptySmall()],
+      idleDown: emptySmall(),
+      walkUp: [emptySmall(), emptySmall(), emptySmall()],
+      idleUp: emptySmall(),
+      walkRight: [emptyLarge(), emptyLarge()],
+    };
+  }
 }
 
 /**

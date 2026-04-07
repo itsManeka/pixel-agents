@@ -9,7 +9,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { CHAR_COUNT, CHAR_FRAMES_PER_ROW, WALL_BITMASK_COUNT } from '../shared/assets/constants.js';
+import {
+  CHAR_COUNT,
+  CHAR_FRAMES_PER_ROW,
+  MAX_PET_PNG_SIZE,
+  WALL_BITMASK_COUNT,
+} from '../shared/assets/constants.js';
 import type {
   FurnitureAsset,
   FurnitureManifest,
@@ -20,11 +25,12 @@ import { flattenManifest } from '../shared/assets/manifestUtils.js';
 import {
   decodeCharacterPng,
   decodeFloorPng,
+  decodePetPng,
   parseWallPng,
   pngToSpriteData,
 } from '../shared/assets/pngDecoder.js';
-import type { CharacterDirectionSprites } from '../shared/assets/types.js';
-export type { CharacterDirectionSprites } from '../shared/assets/types.js';
+import type { CharacterDirectionSprites, PetSpriteFrames } from '../shared/assets/types.js';
+export type { CharacterDirectionSprites, PetSpriteFrames } from '../shared/assets/types.js';
 
 import { LAYOUT_REVISION_KEY } from './constants.js';
 
@@ -501,6 +507,164 @@ export function sendCharacterSpritesToWebview(
     characters: charSprites.characters,
   });
   console.log(`📤 Sent ${charSprites.characters.length} character sprites to webview`);
+}
+
+// ── Pet sprite loading ─────────────────────────────────────
+
+export interface LoadedPetSprites {
+  pets: PetSpriteFrames[];
+}
+
+export function mergePetSprites(a: LoadedPetSprites, b: LoadedPetSprites): LoadedPetSprites {
+  return { pets: [...a.pets, ...b.pets] };
+}
+
+/**
+ * Load pet sprites from assets/pets/ (pet_N.png files, sorted numerically).
+ * Each PNG is 64×96: 3 direction rows with variable frame sizes.
+ */
+export async function loadPetSprites(assetsRoot: string): Promise<LoadedPetSprites | null> {
+  try {
+    const petDir = path.join(assetsRoot, 'assets', 'pets');
+    if (!fs.existsSync(petDir)) {
+      return null;
+    }
+
+    const entries = fs.readdirSync(petDir);
+    const petFiles: { index: number; filename: string }[] = [];
+    for (const entry of entries) {
+      const match = /^pet_(\d+)\.png$/i.exec(entry);
+      if (match) {
+        petFiles.push({ index: parseInt(match[1], 10), filename: entry });
+      }
+    }
+
+    if (petFiles.length === 0) {
+      return null;
+    }
+
+    petFiles.sort((a, b) => a.index - b.index);
+
+    const pets: PetSpriteFrames[] = [];
+    const resolvedDir = path.resolve(petDir);
+    for (const { filename } of petFiles) {
+      const filePath = path.join(petDir, filename);
+      const resolvedFile = path.resolve(filePath);
+      if (!resolvedFile.startsWith(resolvedDir + path.sep) && resolvedFile !== resolvedDir) {
+        console.warn(`  [AssetLoader] Skipping pet with path outside directory: ${filename}`);
+        continue;
+      }
+      try {
+        const stat = fs.statSync(filePath);
+        if (stat.size > MAX_PET_PNG_SIZE) {
+          console.warn(
+            `[AssetLoader] ⚠️  Skipping oversized pet ${filename}: ${stat.size} bytes (max ${MAX_PET_PNG_SIZE})`,
+          );
+          continue;
+        }
+        const pngBuffer = fs.readFileSync(filePath);
+        pets.push(decodePetPng(pngBuffer));
+      } catch (err) {
+        console.warn(
+          `[AssetLoader] ⚠️  Error loading pet ${filename}: ${err instanceof Error ? err.message : err}`,
+        );
+      }
+    }
+
+    if (pets.length === 0) {
+      return null;
+    }
+
+    console.log(`[AssetLoader] ✅ Loaded ${pets.length} pet sprites`);
+    return { pets };
+  } catch (err) {
+    console.error(
+      `[AssetLoader] ❌ Error loading pet sprites: ${err instanceof Error ? err.message : err}`,
+    );
+    return null;
+  }
+}
+
+/**
+ * Load pet sprites from an external asset directory.
+ * Scans assets/pets/ for pet_N.png files (any N, sorted numerically).
+ */
+export async function loadExternalPetSprites(
+  externalRoot: string,
+): Promise<LoadedPetSprites | null> {
+  try {
+    const petDir = path.join(externalRoot, 'assets', 'pets');
+    if (!fs.existsSync(petDir)) {
+      return null;
+    }
+
+    const entries = fs.readdirSync(petDir);
+    const petFiles: { index: number; filename: string }[] = [];
+    for (const entry of entries) {
+      const match = /^pet_(\d+)\.png$/i.exec(entry);
+      if (match) {
+        petFiles.push({ index: parseInt(match[1], 10), filename: entry });
+      }
+    }
+
+    if (petFiles.length === 0) {
+      return null;
+    }
+
+    petFiles.sort((a, b) => a.index - b.index);
+
+    const pets: PetSpriteFrames[] = [];
+    for (const { filename } of petFiles) {
+      const filePath = path.join(petDir, filename);
+      const resolvedFile = path.resolve(filePath);
+      const resolvedDir = path.resolve(petDir);
+      if (!resolvedFile.startsWith(resolvedDir + path.sep) && resolvedFile !== resolvedDir) {
+        console.warn(`  [AssetLoader] Skipping pet with path outside directory: ${filename}`);
+        continue;
+      }
+      try {
+        const stat = fs.statSync(filePath);
+        if (stat.size > MAX_PET_PNG_SIZE) {
+          console.warn(
+            `[AssetLoader] ⚠️  Skipping oversized pet ${filename}: ${stat.size} bytes (max ${MAX_PET_PNG_SIZE})`,
+          );
+          continue;
+        }
+        const pngBuffer = fs.readFileSync(filePath);
+        pets.push(decodePetPng(pngBuffer));
+      } catch (err) {
+        console.warn(
+          `  [AssetLoader] ⚠️  Error loading pet ${filename}: ${err instanceof Error ? err.message : err}`,
+        );
+      }
+    }
+
+    if (pets.length === 0) {
+      return null;
+    }
+
+    console.log(`[AssetLoader] ✅ Loaded ${pets.length} external pet sprites from ${externalRoot}`);
+    return { pets };
+  } catch (err) {
+    console.error(
+      `[AssetLoader] ❌ Error loading external pet sprites: ${err instanceof Error ? err.message : err}`,
+    );
+    return null;
+  }
+}
+
+/**
+ * Send pet sprites to webview
+ */
+export function sendPetSpritesToWebview(
+  webview: vscode.Webview,
+  petSprites: LoadedPetSprites,
+): void {
+  webview.postMessage({
+    type: 'petSpritesLoaded',
+    pets: petSprites.pets,
+  });
+  console.log(`📤 Sent ${petSprites.pets.length} pet sprites to webview`);
 }
 
 /**
