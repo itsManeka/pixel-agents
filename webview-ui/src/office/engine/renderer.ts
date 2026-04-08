@@ -43,6 +43,7 @@ import {
 import type {
   Character,
   FurnitureInstance,
+  Pet,
   Seat,
   SpriteData,
   TileType as TileTypeVal,
@@ -51,6 +52,8 @@ import { CharacterState, TILE_SIZE, TileType } from '../types.js';
 import { getWallInstances, hasWallSprites, wallColorToHex } from '../wallTiles.js';
 import { getCharacterSprite } from './characters.js';
 import { renderMatrixEffect } from './matrixEffect.js';
+import { getPetSpriteData } from './petEntity.js';
+import { getPetSprites } from '../sprites/petSpriteData.js';
 
 // ── Render functions ────────────────────────────────────────────
 
@@ -116,6 +119,7 @@ export function renderScene(
   zoom: number,
   selectedAgentId: number | null,
   hoveredAgentId: number | null,
+  pets: Pet[] = [],
 ): void {
   const drawables: ZDrawable[] = [];
 
@@ -198,6 +202,23 @@ export function renderScene(
 
     drawables.push({
       zY: charZY,
+      draw: (c) => {
+        c.drawImage(cached, drawX, drawY);
+      },
+    });
+  }
+
+  // Pets
+  for (const pet of pets) {
+    const petSprites = getPetSprites(pet.petType);
+    const spriteData = getPetSpriteData(pet, petSprites);
+    if (!spriteData) continue;
+    const cached = getCachedSprite(spriteData, zoom);
+    const drawX = Math.round(offsetX + pet.x * zoom - cached.width / 2);
+    const drawY = Math.round(offsetY + pet.y * zoom - cached.height);
+    const petZY = pet.y + TILE_SIZE / 2;
+    drawables.push({
+      zY: petZY,
       draw: (c) => {
         c.drawImage(cached, drawX, drawY);
       },
@@ -582,6 +603,7 @@ export function renderFrame(
   tileColors?: Array<ColorValue | null>,
   layoutCols?: number,
   layoutRows?: number,
+  pets?: Pet[],
 ): { offsetX: number; offsetY: number } {
   // Clear
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -620,7 +642,7 @@ export function renderFrame(
   // Draw walls + furniture + characters (z-sorted)
   const selectedId = selection?.selectedAgentId ?? null;
   const hoveredId = selection?.hoveredAgentId ?? null;
-  renderScene(ctx, allFurniture, characters, offsetX, offsetY, zoom, selectedId, hoveredId);
+  renderScene(ctx, allFurniture, characters, offsetX, offsetY, zoom, selectedId, hoveredId, pets ?? []);
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom);
