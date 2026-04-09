@@ -13,7 +13,7 @@ import {
   getActiveCategories,
   getCatalogByCategory,
 } from '../layout/furnitureCatalog.js';
-import { getPetSprites } from '../sprites/petSpriteData.js';
+import { getPetName, getPetSprites } from '../sprites/petSpriteData.js';
 import { getCachedSprite } from '../sprites/spriteCache.js';
 import type { TileType as TileTypeVal } from '../types.js';
 import { EditTool } from '../types.js';
@@ -325,7 +325,7 @@ export function EditorToolbar({
                 height={64}
                 selected={isActive}
                 onClick={() => onPetToggle(i, !isActive)}
-                title={`Pet ${i + 1}`}
+                title={getPetName(i)}
                 deps={[i]}
                 draw={(ctx, w, h) => {
                   if (!sprites) {
