@@ -194,6 +194,8 @@ export interface Character {
 
 export interface Pet {
   id: string;
+  /** Display name from manifest.json */
+  name: string;
   /** Index into getPetSprites() from f01 */
   petType: number;
   state: PetState;
@@ -220,6 +222,10 @@ export interface Pet {
   followDuration: number;
   /** Max follow duration before returning to IDLE */
   followDurationLimit: number;
+  /** Active speech bubble type, or null if none showing */
+  bubbleType: 'heart' | null;
+  /** Countdown timer for bubble (heart: 2→0) */
+  bubbleTimer: number;
 }
 
 export interface PlacedPet {

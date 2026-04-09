@@ -689,6 +689,18 @@ export function OfficeCanvas({
         return;
       }
 
+      // Check pet hit — show heart bubble or dismiss existing one
+      const petId = officeState.getPetAt(pos.worldX, pos.worldY);
+      if (petId !== null) {
+        const pet = officeState.pets.find((p) => p.id === petId);
+        if (pet?.bubbleType) {
+          officeState.dismissPetBubble(petId);
+        } else {
+          officeState.showPetBubble(petId);
+        }
+        return;
+      }
+
       // No agent hit — check seat click while agent is selected
       if (officeState.selectedAgentId !== null) {
         const selectedCh = officeState.characters.get(officeState.selectedAgentId);

@@ -402,6 +402,7 @@ export function useExtensionMessages(
         const pets = msg.pets;
         if (!Array.isArray(pets)) return;
         console.log(`[Webview] Received ${pets.length} pet sprites`);
+        const manifests = Array.isArray(msg.manifests) ? msg.manifests : undefined;
         setPetTemplates(
           pets as Array<{
             walkDown: string[][][];
@@ -410,6 +411,7 @@ export function useExtensionMessages(
             idleUp: string[][];
             walkRight: string[][][];
           }>,
+          manifests,
         );
       } else if (msg.type === 'floorTilesLoaded') {
         const sprites = msg.sprites as string[][][];

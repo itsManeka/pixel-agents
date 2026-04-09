@@ -15,7 +15,13 @@ function flipHorizontal(sprite: SpriteData): SpriteData {
   return sprite.map((row) => [...row].reverse());
 }
 
+export interface PetManifest {
+  id: string;
+  name: string;
+}
+
 let loadedPets: PetSpriteFrames[] | null = null;
+let loadedPetManifests: PetManifest[] = [];
 
 export function setPetTemplates(
   data: Array<{
@@ -25,6 +31,7 @@ export function setPetTemplates(
     idleUp: string[][];
     walkRight: string[][][];
   }>,
+  manifests?: PetManifest[],
 ): void {
   loadedPets = data
     .filter(
@@ -48,6 +55,7 @@ export function setPetTemplates(
       idleRight: raw.idleUp,
       idleLeft: raw.idleDown,
     }));
+  loadedPetManifests = manifests ?? [];
 }
 
 export function getPetSprites(petIndex: number): PetSpriteFrames | null {
@@ -56,4 +64,8 @@ export function getPetSprites(petIndex: number): PetSpriteFrames | null {
 
 export function getPetCount(): number {
   return loadedPets?.length ?? 0;
+}
+
+export function getPetName(petIndex: number): string {
+  return loadedPetManifests[petIndex]?.name ?? `Pet ${petIndex}`;
 }

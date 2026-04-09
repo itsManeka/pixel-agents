@@ -35,7 +35,7 @@ function toJson(layout: OfficeLayout): string {
 describe('migrateLayoutColors — pets migration', () => {
   it('initializes pets to [] when field is absent', () => {
     const layout = makeLayout();
-    delete (layout as Record<string, unknown>).pets;
+    delete (layout as unknown as Record<string, unknown>).pets;
     const migrated = migrateLayoutColors(layout);
     assert.ok(Array.isArray(migrated.pets));
     assert.equal(migrated.pets!.length, 0);
@@ -55,7 +55,7 @@ describe('migrateLayoutColors — pets migration', () => {
     const layout = makeLayout({
       tileColors: [null, null, null, null],
     });
-    delete (layout as Record<string, unknown>).pets;
+    delete (layout as unknown as Record<string, unknown>).pets;
     const migrated = migrateLayoutColors(layout);
     assert.ok(Array.isArray(migrated.pets));
     assert.equal(migrated.pets!.length, 0);
@@ -77,7 +77,7 @@ describe('migrateLayoutColors — pets migration', () => {
 describe('deserializeLayout — pets handling', () => {
   it('returns pets: [] for JSON without pets field', () => {
     const layout = makeLayout();
-    delete (layout as Record<string, unknown>).pets;
+    delete (layout as unknown as Record<string, unknown>).pets;
     const result = deserializeLayout(toJson(layout));
     assert.ok(result !== null);
     assert.ok(Array.isArray(result!.pets));

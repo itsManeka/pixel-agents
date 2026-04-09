@@ -28,6 +28,28 @@ import {
 } from './constants.js';
 import type { CharacterDirectionSprites, PetSpriteFrames } from './types.js';
 
+// ── PNG sanitization ────────────────────────────────────────
+
+/**
+ * Strip any bytes after the IEND chunk so pngjs doesn't reject the file.
+ * Many image editors (e.g. Aseprite, Piskel) append trailing null bytes.
+ */
+function sanitizePngBuffer(buf: Buffer): Buffer {
+  // IEND chunk type bytes: 0x49 0x45 0x4E 0x44
+  // A chunk is: 4-byte length + 4-byte type + data + 4-byte CRC
+  // IEND has 0 data bytes, so it's: [00 00 00 00] [49 45 4E 44] [CRC 4 bytes] = 12 bytes total
+  for (let i = buf.length - 12; i >= 8; i--) {
+    if (buf[i] === 0x49 && buf[i + 1] === 0x45 && buf[i + 2] === 0x4e && buf[i + 3] === 0x44) {
+      const endPos = i + 4 + 4; // past type + CRC
+      if (buf.length > endPos) {
+        return buf.subarray(0, endPos);
+      }
+      break;
+    }
+  }
+  return buf;
+}
+
 // ── Sprite decoding ──────────────────────────────────────────
 
 /**
@@ -36,7 +58,7 @@ import type { CharacterDirectionSprites, PetSpriteFrames } from './types.js';
  */
 export function pngToSpriteData(pngBuffer: Buffer, width: number, height: number): string[][] {
   try {
-    const png = PNG.sync.read(pngBuffer);
+    const png = PNG.sync.read(sanitizePngBuffer(pngBuffer));
 
     if (png.width !== width || png.height !== height) {
       console.warn(
@@ -76,7 +98,7 @@ export function pngToSpriteData(pngBuffer: Buffer, width: number, height: number
  * Piece at bitmask M: col = M % 4, row = floor(M / 4).
  */
 export function parseWallPng(pngBuffer: Buffer): string[][][] {
-  const png = PNG.sync.read(pngBuffer);
+  const png = PNG.sync.read(sanitizePngBuffer(pngBuffer));
   const sprites: string[][][] = [];
   for (let mask = 0; mask < WALL_BITMASK_COUNT; mask++) {
     const ox = (mask % WALL_GRID_COLS) * WALL_PIECE_WIDTH;
@@ -104,7 +126,7 @@ export function parseWallPng(pngBuffer: Buffer): string[][][] {
  * Each PNG has 3 direction rows (down, up, right) × 7 frames (16×32 each).
  */
 export function decodeCharacterPng(pngBuffer: Buffer): CharacterDirectionSprites {
-  const png = PNG.sync.read(pngBuffer);
+  const png = PNG.sync.read(sanitizePngBuffer(pngBuffer));
   const charData: CharacterDirectionSprites = { down: [], up: [], right: [] };
 
   for (let dirIdx = 0; dirIdx < CHARACTER_DIRECTIONS.length; dirIdx++) {
@@ -143,7 +165,7 @@ export function decodeCharacterPng(pngBuffer: Buffer): CharacterDirectionSprites
  */
 export function decodePetPng(pngBuffer: Buffer): PetSpriteFrames {
   try {
-    const png = PNG.sync.read(pngBuffer);
+    const png = PNG.sync.read(sanitizePngBuffer(pngBuffer));
 
     if (png.width !== PET_IMAGE_WIDTH || png.height !== PET_IMAGE_HEIGHT) {
       console.warn(

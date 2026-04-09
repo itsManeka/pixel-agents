@@ -9,7 +9,7 @@ import {
   PET_WANDER_PAUSE_MAX_SEC,
   PET_WANDER_PAUSE_MIN_SEC,
 } from '../../constants.js';
-import { findPetPath, isPetWalkable } from '../layout/tileMap.js';
+import { findPath, isWalkable } from '../layout/tileMap.js';
 import type { PetSpriteFrames } from '../sprites/petSpriteData.js';
 import type { Character, Pet, SpriteData, TileType as TileTypeVal } from '../types.js';
 import { Direction, PetState, TILE_SIZE } from '../types.js';
@@ -39,23 +39,20 @@ function directionBetween(
   return Direction.UP;
 }
 
-function manhattanDistance(
-  col1: number,
-  row1: number,
-  col2: number,
-  row2: number,
-): number {
+function manhattanDistance(col1: number, row1: number, col2: number, row2: number): number {
   return Math.abs(col1 - col2) + Math.abs(row1 - row2);
 }
 
 export function createPet(
   id: string,
   petType: number,
+  name: string,
   spawnTile: { col: number; row: number },
 ): Pet {
   const center = tileCenter(spawnTile.col, spawnTile.row);
   return {
     id,
+    name,
     petType,
     state: PetState.IDLE,
     dir: Direction.DOWN,
@@ -72,14 +69,13 @@ export function createPet(
     followRecalcTimer: 0,
     followDuration: 0,
     followDurationLimit: 0,
+    bubbleType: null,
+    bubbleTimer: 0,
   };
 }
 
 /** Find the closest character within follow radius, or null */
-function findNearbyCharacter(
-  pet: Pet,
-  characters: Map<number, Character>,
-): Character | null {
+function findNearbyCharacter(pet: Pet, characters: Map<number, Character>): Character | null {
   let closest: Character | null = null;
   let closestDist = Infinity;
   for (const ch of characters.values()) {
@@ -92,12 +88,11 @@ function findNearbyCharacter(
   return closest;
 }
 
-/** Find a pet-walkable tile adjacent to a character */
+/** Find a walkable tile adjacent to a character */
 function findAdjacentTile(
   ch: Character,
   tileMap: TileTypeVal[][],
   blockedTiles: Set<string>,
-  bgFurnitureTiles: Set<string>,
 ): { col: number; row: number } | null {
   const offsets = [
     { dc: 0, dr: -1 },
@@ -108,7 +103,7 @@ function findAdjacentTile(
   for (const { dc, dr } of offsets) {
     const nc = ch.tileCol + dc;
     const nr = ch.tileRow + dr;
-    if (isPetWalkable(nc, nr, tileMap, blockedTiles, bgFurnitureTiles)) {
+    if (isWalkable(nc, nr, tileMap, blockedTiles)) {
       return { col: nc, row: nr };
     }
   }
@@ -149,11 +144,10 @@ function updateWalkAnimation(pet: Pet): void {
 export function updatePet(
   pet: Pet,
   dt: number,
-  petWalkableTiles: Array<{ col: number; row: number }>,
+  walkableTiles: Array<{ col: number; row: number }>,
   characters: Map<number, Character>,
   tileMap: TileTypeVal[][],
   blockedTiles: Set<string>,
-  bgFurnitureTiles: Set<string>,
 ): void {
   pet.frameTimer += dt;
 
@@ -186,19 +180,18 @@ export function updatePet(
       }
 
       // Wander to random tile (exclude current tile to avoid no-op pathfinding)
-      const candidates = petWalkableTiles.filter(
+      const candidates = walkableTiles.filter(
         (t) => t.col !== pet.tileCol || t.row !== pet.tileRow,
       );
       if (candidates.length > 0) {
         const target = candidates[Math.floor(Math.random() * candidates.length)];
-        const path = findPetPath(
+        const path = findPath(
           pet.tileCol,
           pet.tileRow,
           target.col,
           target.row,
           tileMap,
           blockedTiles,
-          bgFurnitureTiles,
         );
         if (path.length > 0) {
           pet.path = path;
@@ -263,16 +256,15 @@ export function updatePet(
       // Recalculate path periodically
       pet.followRecalcTimer -= dt;
       if (pet.followRecalcTimer <= 0) {
-        const adjTile = findAdjacentTile(target, tileMap, blockedTiles, bgFurnitureTiles);
+        const adjTile = findAdjacentTile(target, tileMap, blockedTiles);
         if (adjTile) {
-          const newPath = findPetPath(
+          const newPath = findPath(
             pet.tileCol,
             pet.tileRow,
             adjTile.col,
             adjTile.row,
             tileMap,
             blockedTiles,
-            furniture,
           );
           if (newPath.length > 0) {
             pet.path = newPath;
@@ -291,10 +283,7 @@ export function updatePet(
 }
 
 /** Get the current sprite frame for a pet based on its state, direction, and animation frame */
-export function getPetSpriteData(
-  pet: Pet,
-  petSprites: PetSpriteFrames | null,
-): SpriteData | null {
+export function getPetSpriteData(pet: Pet, petSprites: PetSpriteFrames | null): SpriteData | null {
   if (!petSprites) return null;
 
   const dir = pet.dir;

@@ -511,17 +511,24 @@ export function sendCharacterSpritesToWebview(
 
 // ── Pet sprite loading ─────────────────────────────────────
 
+export interface PetManifest {
+  id: string;
+  name: string;
+}
+
 export interface LoadedPetSprites {
   pets: PetSpriteFrames[];
+  manifests: PetManifest[];
 }
 
 export function mergePetSprites(a: LoadedPetSprites, b: LoadedPetSprites): LoadedPetSprites {
-  return { pets: [...a.pets, ...b.pets] };
+  return { pets: [...a.pets, ...b.pets], manifests: [...a.manifests, ...b.manifests] };
 }
 
 /**
- * Load pet sprites from assets/pets/ (pet_N.png files, sorted numerically).
- * Each PNG is 64×96: 3 direction rows with variable frame sizes.
+ * Load pet sprites from assets/pets/ subdirectories.
+ * Each subdirectory must contain a manifest.json ({ id, name }) and a pet.png sprite.
+ * Subdirectories are sorted alphabetically by name.
  */
 export async function loadPetSprites(assetsRoot: string): Promise<LoadedPetSprites | null> {
   try {
@@ -531,42 +538,60 @@ export async function loadPetSprites(assetsRoot: string): Promise<LoadedPetSprit
     }
 
     const entries = fs.readdirSync(petDir);
-    const petFiles: { index: number; filename: string }[] = [];
+    const petDirs: string[] = [];
     for (const entry of entries) {
-      const match = /^pet_(\d+)\.png$/i.exec(entry);
-      if (match) {
-        petFiles.push({ index: parseInt(match[1], 10), filename: entry });
+      const entryPath = path.join(petDir, entry);
+      if (fs.statSync(entryPath).isDirectory()) {
+        petDirs.push(entry);
       }
     }
 
-    if (petFiles.length === 0) {
+    petDirs.sort();
+
+    if (petDirs.length === 0) {
       return null;
     }
 
-    petFiles.sort((a, b) => a.index - b.index);
-
     const pets: PetSpriteFrames[] = [];
+    const manifests: PetManifest[] = [];
     const resolvedDir = path.resolve(petDir);
-    for (const { filename } of petFiles) {
-      const filePath = path.join(petDir, filename);
-      const resolvedFile = path.resolve(filePath);
-      if (!resolvedFile.startsWith(resolvedDir + path.sep) && resolvedFile !== resolvedDir) {
-        console.warn(`  [AssetLoader] Skipping pet with path outside directory: ${filename}`);
+    for (const dirName of petDirs) {
+      const subDir = path.join(petDir, dirName);
+      const resolvedSub = path.resolve(subDir);
+      if (!resolvedSub.startsWith(resolvedDir + path.sep)) {
+        console.warn(`  [AssetLoader] Skipping pet with path outside directory: ${dirName}`);
         continue;
       }
+
+      const manifestPath = path.join(subDir, 'manifest.json');
+      const pngPath = path.join(subDir, 'pet.png');
+
+      if (!fs.existsSync(manifestPath) || !fs.existsSync(pngPath)) {
+        console.warn(`  [AssetLoader] Skipping pet ${dirName}: missing manifest.json or pet.png`);
+        continue;
+      }
+
       try {
-        const stat = fs.statSync(filePath);
+        const manifestData = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+        if (!manifestData.id || !manifestData.name) {
+          console.warn(`  [AssetLoader] Skipping pet ${dirName}: manifest missing id or name`);
+          continue;
+        }
+
+        const stat = fs.statSync(pngPath);
         if (stat.size > MAX_PET_PNG_SIZE) {
           console.warn(
-            `[AssetLoader] ⚠️  Skipping oversized pet ${filename}: ${stat.size} bytes (max ${MAX_PET_PNG_SIZE})`,
+            `[AssetLoader] ⚠️  Skipping oversized pet ${dirName}: ${stat.size} bytes (max ${MAX_PET_PNG_SIZE})`,
           );
           continue;
         }
-        const pngBuffer = fs.readFileSync(filePath);
+
+        const pngBuffer = fs.readFileSync(pngPath);
         pets.push(decodePetPng(pngBuffer));
+        manifests.push({ id: manifestData.id, name: manifestData.name });
       } catch (err) {
         console.warn(
-          `[AssetLoader] ⚠️  Error loading pet ${filename}: ${err instanceof Error ? err.message : err}`,
+          `[AssetLoader] ⚠️  Error loading pet ${dirName}: ${err instanceof Error ? err.message : err}`,
         );
       }
     }
@@ -576,7 +601,7 @@ export async function loadPetSprites(assetsRoot: string): Promise<LoadedPetSprit
     }
 
     console.log(`[AssetLoader] ✅ Loaded ${pets.length} pet sprites`);
-    return { pets };
+    return { pets, manifests };
   } catch (err) {
     console.error(
       `[AssetLoader] ❌ Error loading pet sprites: ${err instanceof Error ? err.message : err}`,
@@ -587,7 +612,7 @@ export async function loadPetSprites(assetsRoot: string): Promise<LoadedPetSprit
 
 /**
  * Load pet sprites from an external asset directory.
- * Scans assets/pets/ for pet_N.png files (any N, sorted numerically).
+ * Scans assets/pets/ subdirectories for manifest.json + pet.png.
  */
 export async function loadExternalPetSprites(
   externalRoot: string,
@@ -599,42 +624,60 @@ export async function loadExternalPetSprites(
     }
 
     const entries = fs.readdirSync(petDir);
-    const petFiles: { index: number; filename: string }[] = [];
+    const petDirs: string[] = [];
     for (const entry of entries) {
-      const match = /^pet_(\d+)\.png$/i.exec(entry);
-      if (match) {
-        petFiles.push({ index: parseInt(match[1], 10), filename: entry });
+      const entryPath = path.join(petDir, entry);
+      if (fs.statSync(entryPath).isDirectory()) {
+        petDirs.push(entry);
       }
     }
 
-    if (petFiles.length === 0) {
+    petDirs.sort();
+
+    if (petDirs.length === 0) {
       return null;
     }
 
-    petFiles.sort((a, b) => a.index - b.index);
-
     const pets: PetSpriteFrames[] = [];
-    for (const { filename } of petFiles) {
-      const filePath = path.join(petDir, filename);
-      const resolvedFile = path.resolve(filePath);
+    const manifests: PetManifest[] = [];
+    for (const dirName of petDirs) {
+      const subDir = path.join(petDir, dirName);
+      const resolvedFile = path.resolve(subDir);
       const resolvedDir = path.resolve(petDir);
-      if (!resolvedFile.startsWith(resolvedDir + path.sep) && resolvedFile !== resolvedDir) {
-        console.warn(`  [AssetLoader] Skipping pet with path outside directory: ${filename}`);
+      if (!resolvedFile.startsWith(resolvedDir + path.sep)) {
+        console.warn(`  [AssetLoader] Skipping pet with path outside directory: ${dirName}`);
         continue;
       }
+
+      const manifestPath = path.join(subDir, 'manifest.json');
+      const pngPath = path.join(subDir, 'pet.png');
+
+      if (!fs.existsSync(manifestPath) || !fs.existsSync(pngPath)) {
+        console.warn(`  [AssetLoader] Skipping pet ${dirName}: missing manifest.json or pet.png`);
+        continue;
+      }
+
       try {
-        const stat = fs.statSync(filePath);
+        const manifestData = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+        if (!manifestData.id || !manifestData.name) {
+          console.warn(`  [AssetLoader] Skipping pet ${dirName}: manifest missing id or name`);
+          continue;
+        }
+
+        const stat = fs.statSync(pngPath);
         if (stat.size > MAX_PET_PNG_SIZE) {
           console.warn(
-            `[AssetLoader] ⚠️  Skipping oversized pet ${filename}: ${stat.size} bytes (max ${MAX_PET_PNG_SIZE})`,
+            `[AssetLoader] ⚠️  Skipping oversized pet ${dirName}: ${stat.size} bytes (max ${MAX_PET_PNG_SIZE})`,
           );
           continue;
         }
-        const pngBuffer = fs.readFileSync(filePath);
+
+        const pngBuffer = fs.readFileSync(pngPath);
         pets.push(decodePetPng(pngBuffer));
+        manifests.push({ id: manifestData.id, name: manifestData.name });
       } catch (err) {
         console.warn(
-          `  [AssetLoader] ⚠️  Error loading pet ${filename}: ${err instanceof Error ? err.message : err}`,
+          `  [AssetLoader] ⚠️  Error loading pet ${dirName}: ${err instanceof Error ? err.message : err}`,
         );
       }
     }
@@ -644,7 +687,7 @@ export async function loadExternalPetSprites(
     }
 
     console.log(`[AssetLoader] ✅ Loaded ${pets.length} external pet sprites from ${externalRoot}`);
-    return { pets };
+    return { pets, manifests };
   } catch (err) {
     console.error(
       `[AssetLoader] ❌ Error loading external pet sprites: ${err instanceof Error ? err.message : err}`,
@@ -663,6 +706,7 @@ export function sendPetSpritesToWebview(
   webview.postMessage({
     type: 'petSpritesLoaded',
     pets: petSprites.pets,
+    manifests: petSprites.manifests,
   });
   console.log(`📤 Sent ${petSprites.pets.length} pet sprites to webview`);
 }

@@ -10,6 +10,8 @@ import {
   HUE_SHIFT_RANGE_DEG,
   INACTIVE_SEAT_TIMER_MIN_SEC,
   INACTIVE_SEAT_TIMER_RANGE_SEC,
+  PET_HIT_HALF_WIDTH,
+  PET_HIT_HEIGHT,
   WAITING_BUBBLE_DURATION_SEC,
 } from '../../constants.js';
 import { getAnimationFrames, getCatalogEntry, getOnStateType } from '../layout/furnitureCatalog.js';
@@ -20,14 +22,8 @@ import {
   layoutToSeats,
   layoutToTileMap,
 } from '../layout/layoutSerializer.js';
-import {
-  buildBgFurnitureTiles,
-  findPath,
-  getPetWalkableTiles,
-  getWalkableTiles,
-  isWalkable,
-} from '../layout/tileMap.js';
-import { getPetCount } from '../sprites/petSpriteData.js';
+import { findPath, getWalkableTiles, isWalkable } from '../layout/tileMap.js';
+import { getPetCount, getPetName } from '../sprites/petSpriteData.js';
 import { getLoadedCharacterCount } from '../sprites/spriteData.js';
 import type {
   Character,
@@ -53,8 +49,6 @@ export class OfficeState {
   walkableTiles: Array<{ col: number; row: number }>;
   characters: Map<number, Character> = new Map();
   pets: Pet[] = [];
-  petWalkableTiles: Array<{ col: number; row: number }> = [];
-  bgFurnitureTiles: Set<string> = new Set();
   /** Accumulated time for furniture animation frame cycling */
   furnitureAnimTimer = 0;
   selectedAgentId: number | null = null;
@@ -74,12 +68,6 @@ export class OfficeState {
     this.blockedTiles = getBlockedTiles(this.layout.furniture);
     this.furniture = layoutToFurnitureInstances(this.layout.furniture);
     this.walkableTiles = getWalkableTiles(this.tileMap, this.blockedTiles);
-    this.bgFurnitureTiles = buildBgFurnitureTiles(this.layout.furniture);
-    this.petWalkableTiles = getPetWalkableTiles(
-      this.tileMap,
-      this.blockedTiles,
-      this.layout.furniture,
-    );
   }
 
   /** Rebuild all derived state from a new layout. Reassigns existing characters.
@@ -91,8 +79,6 @@ export class OfficeState {
     this.blockedTiles = getBlockedTiles(layout.furniture);
     this.rebuildFurnitureInstances();
     this.walkableTiles = getWalkableTiles(this.tileMap, this.blockedTiles);
-    this.bgFurnitureTiles = buildBgFurnitureTiles(layout.furniture);
-    this.petWalkableTiles = getPetWalkableTiles(this.tileMap, this.blockedTiles, layout.furniture);
 
     // Shift character and pet positions when grid expands left/up
     if (shift && (shift.col !== 0 || shift.row !== 0)) {
@@ -300,10 +286,11 @@ export class OfficeState {
     )
       return;
     if (this.pets.find((p) => p.id === placedPet.id)) return;
-    const tiles = this.petWalkableTiles.length > 0 ? this.petWalkableTiles : this.walkableTiles;
+    const tiles = this.walkableTiles;
     if (tiles.length === 0) return; // no valid spawn point
     const spawn = tiles[Math.floor(Math.random() * tiles.length)];
-    const pet = createPet(placedPet.id, placedPet.petType, spawn);
+    const name = getPetName(placedPet.petType);
+    const pet = createPet(placedPet.id, placedPet.petType, name, spawn);
     this.pets.push(pet);
   }
 
@@ -806,15 +793,16 @@ export class OfficeState {
 
     // Update pets
     for (const pet of this.pets) {
-      updatePet(
-        pet,
-        dt,
-        this.petWalkableTiles,
-        this.characters,
-        this.tileMap,
-        this.blockedTiles,
-        this.bgFurnitureTiles,
-      );
+      updatePet(pet, dt, this.walkableTiles, this.characters, this.tileMap, this.blockedTiles);
+
+      // Tick pet bubble timer
+      if (pet.bubbleType === 'heart') {
+        pet.bubbleTimer -= dt;
+        if (pet.bubbleTimer <= 0) {
+          pet.bubbleType = null;
+          pet.bubbleTimer = 0;
+        }
+      }
     }
   }
 
@@ -841,5 +829,35 @@ export class OfficeState {
       }
     }
     return null;
+  }
+
+  /** Get pet at pixel position (for hit testing). Returns pet id or null. */
+  getPetAt(worldX: number, worldY: number): string | null {
+    const sorted = [...this.pets].sort((a, b) => b.y - a.y);
+    for (const pet of sorted) {
+      // Pet sprite is anchored bottom-center at (pet.x, pet.y)
+      const left = pet.x - PET_HIT_HALF_WIDTH;
+      const right = pet.x + PET_HIT_HALF_WIDTH;
+      const top = pet.y - PET_HIT_HEIGHT;
+      const bottom = pet.y;
+      if (worldX >= left && worldX <= right && worldY >= top && worldY <= bottom) {
+        return pet.id;
+      }
+    }
+    return null;
+  }
+
+  showPetBubble(petId: string): void {
+    const pet = this.pets.find((p) => p.id === petId);
+    if (pet) {
+      pet.bubbleType = 'heart';
+      pet.bubbleTimer = WAITING_BUBBLE_DURATION_SEC;
+    }
+  }
+
+  dismissPetBubble(petId: string): void {
+    const pet = this.pets.find((p) => p.id === petId);
+    if (!pet || !pet.bubbleType) return;
+    pet.bubbleTimer = Math.min(pet.bubbleTimer, DISMISS_BUBBLE_FAST_FADE_SEC);
   }
 }
