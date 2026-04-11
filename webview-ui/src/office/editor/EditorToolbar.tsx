@@ -333,7 +333,7 @@ export function EditorToolbar({
                     ctx.fillRect(0, 0, w, h);
                     return;
                   }
-                  const cached = getCachedSprite(sprites.idleDown, THUMB_ZOOM);
+                  const cached = getCachedSprite(sprites.idleDown[0], THUMB_ZOOM);
                   const scale = Math.min(w / cached.width, h / cached.height) * 0.85;
                   const dw = cached.width * scale;
                   const dh = cached.height * scale;
