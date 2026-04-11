@@ -42,8 +42,8 @@ export interface CatalogEntry {
 
 export interface PetSpriteFrames {
   walkDown: string[][][];
-  idleDown: string[][];
+  idleDown: string[][][];
   walkUp: string[][][];
-  idleUp: string[][];
+  idleUp: string[][][];
   walkRight: string[][][];
 }

@@ -406,9 +406,9 @@ export function useExtensionMessages(
         setPetTemplates(
           pets as Array<{
             walkDown: string[][][];
-            idleDown: string[][];
+            idleDown: string[][][];
             walkUp: string[][][];
-            idleUp: string[][];
+            idleUp: string[][][];
             walkRight: string[][][];
           }>,
           manifests,

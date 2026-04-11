@@ -4,7 +4,10 @@ import {
   PET_FOLLOW_DURATION_MIN_SEC,
   PET_FOLLOW_RADIUS_TILES,
   PET_FOLLOW_RECALC_INTERVAL_SEC,
+  PET_IDLE_FRAME_DURATION_SEC,
+  PET_IDLE_SEQUENCE,
   PET_WALK_FRAME_DURATION_SEC,
+  PET_WALK_SEQUENCE,
   PET_WALK_SPEED_PX_PER_SEC,
   PET_WANDER_PAUSE_MAX_SEC,
   PET_WANDER_PAUSE_MIN_SEC,
@@ -137,7 +140,14 @@ function movePetAlongPath(pet: Pet, dt: number): void {
 function updateWalkAnimation(pet: Pet): void {
   if (pet.frameTimer >= PET_WALK_FRAME_DURATION_SEC) {
     pet.frameTimer -= PET_WALK_FRAME_DURATION_SEC;
-    pet.frame = (pet.frame + 1) % 3;
+    pet.frame = (pet.frame + 1) % PET_WALK_SEQUENCE.length;
+  }
+}
+
+function updateIdleAnimation(pet: Pet): void {
+  if (pet.frameTimer >= PET_IDLE_FRAME_DURATION_SEC) {
+    pet.frameTimer -= PET_IDLE_FRAME_DURATION_SEC;
+    pet.frame = (pet.frame + 1) % PET_IDLE_SEQUENCE.length;
   }
 }
 
@@ -153,6 +163,7 @@ export function updatePet(
 
   switch (pet.state) {
     case PetState.IDLE: {
+      updateIdleAnimation(pet);
       pet.wanderTimer -= dt;
       if (pet.wanderTimer > 0) return;
 
@@ -212,6 +223,7 @@ export function updatePet(
         pet.state = PetState.IDLE;
         pet.wanderTimer = randomBetween(PET_WANDER_PAUSE_MIN_SEC, PET_WANDER_PAUSE_MAX_SEC);
         pet.frame = 0;
+        pet.frameTimer = 0;
       }
       break;
     }
@@ -227,6 +239,7 @@ export function updatePet(
         pet.path = [];
         pet.moveProgress = 0;
         pet.frame = 0;
+        pet.frameTimer = 0;
         return;
       }
 
@@ -238,6 +251,7 @@ export function updatePet(
         pet.path = [];
         pet.moveProgress = 0;
         pet.frame = 0;
+        pet.frameTimer = 0;
         return;
       }
 
@@ -250,6 +264,7 @@ export function updatePet(
         pet.path = [];
         pet.moveProgress = 0;
         pet.frame = 0;
+        pet.frameTimer = 0;
         return;
       }
 
@@ -289,27 +304,29 @@ export function getPetSpriteData(pet: Pet, petSprites: PetSpriteFrames | null): 
   const dir = pet.dir;
 
   if (pet.state === PetState.IDLE) {
+    const idleFrame = PET_IDLE_SEQUENCE[pet.frame % PET_IDLE_SEQUENCE.length];
     switch (dir) {
       case Direction.DOWN:
-        return petSprites.idleDown;
+        return petSprites.idleDown[idleFrame];
       case Direction.UP:
-        return petSprites.idleUp;
+        return petSprites.idleUp[idleFrame];
       case Direction.RIGHT:
-        return petSprites.idleRight;
+        return petSprites.idleRight[idleFrame];
       case Direction.LEFT:
-        return petSprites.idleLeft;
+        return petSprites.idleLeft[idleFrame];
     }
   }
 
   // WALK and FOLLOW use the same walk frames
+  const walkFrame = PET_WALK_SEQUENCE[pet.frame % PET_WALK_SEQUENCE.length];
   switch (dir) {
     case Direction.DOWN:
-      return petSprites.walkDown[pet.frame % petSprites.walkDown.length];
+      return petSprites.walkDown[walkFrame];
     case Direction.UP:
-      return petSprites.walkUp[pet.frame % petSprites.walkUp.length];
+      return petSprites.walkUp[walkFrame];
     case Direction.RIGHT:
-      return petSprites.walkRight[pet.frame % petSprites.walkRight.length];
+      return petSprites.walkRight[walkFrame];
     case Direction.LEFT:
-      return petSprites.walkLeft[pet.frame % petSprites.walkLeft.length];
+      return petSprites.walkLeft[walkFrame];
   }
 }

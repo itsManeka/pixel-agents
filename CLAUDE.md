@@ -250,7 +250,7 @@ All magic numbers and strings are centralized — never add inline constants to 
 
 **Sprite parsing** (`shared/assets/pngDecoder.ts` → `shared/assets/types.ts`):
 
-- Constants: `PET_IMAGE_WIDTH=96`, `PET_IMAGE_HEIGHT=96`, `PET_WALK_FRAMES_VERT=3`, `PET_IDLE_FRAMES_VERT=3`, `PET_WALK_FRAMES_HORIZ=3`, `PET_TOTAL_FRAMES_VERT=6`
+- Constants: `PET_IMAGE_WIDTH=96`, `PET_IMAGE_HEIGHT=96`, `PET_WALK_FRAMES_VERT=3`, `PET_IDLE_FRAMES_VERT=3`, `PET_WALK_FRAMES_HORIZ=3`
 - `PetSpriteFrames` interface: `walkDown`, `idleDown`, `walkUp`, `idleUp` (all `string[][][]`), `walkRight` (3 frames of 32×32)
 - Idle arrays are 3 elements (previously was a single frame)
 

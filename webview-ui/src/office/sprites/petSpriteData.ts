@@ -2,13 +2,13 @@ type SpriteData = string[][];
 
 export interface PetSpriteFrames {
   walkDown: [SpriteData, SpriteData, SpriteData];
-  idleDown: SpriteData;
+  idleDown: [SpriteData, SpriteData, SpriteData];
   walkUp: [SpriteData, SpriteData, SpriteData];
-  idleUp: SpriteData;
-  walkRight: [SpriteData, SpriteData];
-  walkLeft: [SpriteData, SpriteData];
-  idleRight: SpriteData;
-  idleLeft: SpriteData;
+  idleUp: [SpriteData, SpriteData, SpriteData];
+  walkRight: [SpriteData, SpriteData, SpriteData];
+  walkLeft: [SpriteData, SpriteData, SpriteData];
+  idleRight: [SpriteData, SpriteData, SpriteData];
+  idleLeft: [SpriteData, SpriteData, SpriteData];
 }
 
 function flipHorizontal(sprite: SpriteData): SpriteData {
@@ -26,9 +26,9 @@ let loadedPetManifests: PetManifest[] = [];
 export function setPetTemplates(
   data: Array<{
     walkDown: string[][][];
-    idleDown: string[][];
+    idleDown: string[][][];
     walkUp: string[][][];
-    idleUp: string[][];
+    idleUp: string[][][];
     walkRight: string[][][];
   }>,
   manifests?: PetManifest[],
@@ -38,22 +38,23 @@ export function setPetTemplates(
       (raw) =>
         raw.walkDown?.length >= 3 &&
         raw.walkUp?.length >= 3 &&
-        raw.walkRight?.length >= 2 &&
-        raw.idleDown &&
-        raw.idleUp,
+        raw.walkRight?.length >= 3 &&
+        raw.idleDown?.length >= 3 &&
+        raw.idleUp?.length >= 3,
     )
     .map((raw) => ({
       walkDown: raw.walkDown as [SpriteData, SpriteData, SpriteData],
-      idleDown: raw.idleDown,
+      idleDown: raw.idleDown as [SpriteData, SpriteData, SpriteData],
       walkUp: raw.walkUp as [SpriteData, SpriteData, SpriteData],
-      idleUp: raw.idleUp,
-      walkRight: raw.walkRight as [SpriteData, SpriteData],
-      walkLeft: [flipHorizontal(raw.walkRight[0]), flipHorizontal(raw.walkRight[1])] as [
-        SpriteData,
-        SpriteData,
-      ],
-      idleRight: raw.idleUp,
-      idleLeft: raw.idleDown,
+      idleUp: raw.idleUp as [SpriteData, SpriteData, SpriteData],
+      walkRight: raw.walkRight as [SpriteData, SpriteData, SpriteData],
+      walkLeft: [
+        flipHorizontal(raw.walkRight[0]),
+        flipHorizontal(raw.walkRight[1]),
+        flipHorizontal(raw.walkRight[2]),
+      ] as [SpriteData, SpriteData, SpriteData],
+      idleRight: raw.idleDown as [SpriteData, SpriteData, SpriteData],
+      idleLeft: raw.idleUp as [SpriteData, SpriteData, SpriteData],
     }));
   loadedPetManifests = manifests ?? [];
 }

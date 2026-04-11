@@ -17,6 +17,7 @@ import {
   PET_FRAME_H,
   PET_FRAME_W_LARGE,
   PET_FRAME_W_SMALL,
+  PET_IDLE_FRAMES_VERT,
   PET_IMAGE_HEIGHT,
   PET_IMAGE_WIDTH,
   PET_WALK_FRAMES_HORIZ,
@@ -158,10 +159,10 @@ export function decodeCharacterPng(pngBuffer: Buffer): CharacterDirectionSprites
 }
 
 /**
- * Decode a single pet PNG (64×96) into direction-keyed frame arrays.
- * Line 1 (y=0):  4 frames of 16×32 — walkDown[0..2] + idleDown
- * Line 2 (y=32): 4 frames of 16×32 — walkUp[0..2] + idleUp
- * Line 3 (y=64): 2 frames of 32×32 — walkRight[0..1]
+ * Decode a single pet PNG (96×96) into direction-keyed frame arrays.
+ * Line 1 (y=0):  6 frames of 16×32 — walkDown[0..2] + idleDown[0..2]
+ * Line 2 (y=32): 6 frames of 16×32 — walkUp[0..2] + idleUp[0..2]
+ * Line 3 (y=64): 3 frames of 32×32 — walkRight[0..2]
  */
 export function decodePetPng(pngBuffer: Buffer): PetSpriteFrames {
   try {
@@ -189,31 +190,41 @@ export function decodePetPng(pngBuffer: Buffer): PetSpriteFrames {
       return sprite;
     }
 
-    // Line 1 (y=0): 4 frames of 16×32 — walkDown[0..2] + idleDown
+    // Line 1 (y=0): 6 frames of 16×32 — walkDown[0..2] + idleDown[0..2]
     const walkDown: string[][][] = [];
     for (let f = 0; f < PET_WALK_FRAMES_VERT; f++) {
       walkDown.push(extractFrame(f * PET_FRAME_W_SMALL, 0, PET_FRAME_W_SMALL, PET_FRAME_H));
     }
-    const idleDown = extractFrame(
-      PET_WALK_FRAMES_VERT * PET_FRAME_W_SMALL,
-      0,
-      PET_FRAME_W_SMALL,
-      PET_FRAME_H,
-    );
+    const idleDown: string[][][] = [];
+    for (let f = 0; f < PET_IDLE_FRAMES_VERT; f++) {
+      idleDown.push(
+        extractFrame(
+          (PET_WALK_FRAMES_VERT + f) * PET_FRAME_W_SMALL,
+          0,
+          PET_FRAME_W_SMALL,
+          PET_FRAME_H,
+        ),
+      );
+    }
 
-    // Line 2 (y=32): 4 frames of 16×32 — walkUp[0..2] + idleUp
+    // Line 2 (y=32): 6 frames of 16×32 — walkUp[0..2] + idleUp[0..2]
     const walkUp: string[][][] = [];
     for (let f = 0; f < PET_WALK_FRAMES_VERT; f++) {
       walkUp.push(extractFrame(f * PET_FRAME_W_SMALL, PET_FRAME_H, PET_FRAME_W_SMALL, PET_FRAME_H));
     }
-    const idleUp = extractFrame(
-      PET_WALK_FRAMES_VERT * PET_FRAME_W_SMALL,
-      PET_FRAME_H,
-      PET_FRAME_W_SMALL,
-      PET_FRAME_H,
-    );
+    const idleUp: string[][][] = [];
+    for (let f = 0; f < PET_IDLE_FRAMES_VERT; f++) {
+      idleUp.push(
+        extractFrame(
+          (PET_WALK_FRAMES_VERT + f) * PET_FRAME_W_SMALL,
+          PET_FRAME_H,
+          PET_FRAME_W_SMALL,
+          PET_FRAME_H,
+        ),
+      );
+    }
 
-    // Line 3 (y=64): 2 frames of 32×32 — walkRight[0..1]
+    // Line 3 (y=64): 3 frames of 32×32 — walkRight[0..2]
     const walkRight: string[][][] = [];
     for (let f = 0; f < PET_WALK_FRAMES_HORIZ; f++) {
       walkRight.push(
@@ -232,10 +243,10 @@ export function decodePetPng(pngBuffer: Buffer): PetSpriteFrames {
       Array.from({ length: PET_FRAME_H }, () => new Array(PET_FRAME_W_LARGE).fill(''));
     return {
       walkDown: [emptySmall(), emptySmall(), emptySmall()],
-      idleDown: emptySmall(),
+      idleDown: [emptySmall(), emptySmall(), emptySmall()],
       walkUp: [emptySmall(), emptySmall(), emptySmall()],
-      idleUp: emptySmall(),
-      walkRight: [emptyLarge(), emptyLarge()],
+      idleUp: [emptySmall(), emptySmall(), emptySmall()],
+      walkRight: [emptyLarge(), emptyLarge(), emptyLarge()],
     };
   }
 }

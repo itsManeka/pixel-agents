@@ -115,6 +115,9 @@ export const PERMISSION_VOLUME = 0.12;
 // ── Pet Animation & Behavior ────────────────────────────────
 export const PET_WALK_SPEED_PX_PER_SEC = 32;
 export const PET_WALK_FRAME_DURATION_SEC = 0.15;
+export const PET_IDLE_FRAME_DURATION_SEC = 0.3;
+export const PET_WALK_SEQUENCE = [0, 1, 0, 2] as const;
+export const PET_IDLE_SEQUENCE = [0, 1, 2, 1] as const;
 export const PET_WANDER_PAUSE_MIN_SEC = 3.0;
 export const PET_WANDER_PAUSE_MAX_SEC = 15.0;
 export const PET_FOLLOW_RECALC_INTERVAL_SEC = 1.0;
